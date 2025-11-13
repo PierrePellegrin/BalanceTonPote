@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
   Text, 
@@ -8,13 +8,15 @@ import {
   ScrollView, 
   Alert,
   SafeAreaView,
-  FlatList
+  FlatList,
+  Image
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Picker } from '@react-native-picker/picker';
 import * as SQLite from 'expo-sqlite';
+import { Ionicons, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Platform } from 'react-native';
-import { supabase, initializeDatabase, insertBalancage, getAllBalancages, signUp, signIn, signOut, getCurrentUser, onAuthStateChange } from './lib/supabase';
+import { supabase, initializeDatabase, insertBalancage, getAllBalancages, getAllUsers, signUp, signIn, signOut, getCurrentUser, onAuthStateChange } from './lib/supabase';
 import AuthScreen from './components/AuthScreen';
 
 let db;
@@ -23,6 +25,8 @@ export default function App() {
   const [currentTab, setCurrentTab] = useState('dashboard'); // Dashboard comme page d'accueil
   const [nomPote, setNomPote] = useState('');
   const [nomBalanceur, setNomBalanceur] = useState('');
+  const [usersList, setUsersList] = useState([]);
+  const [showNewSuspectInput, setShowNewSuspectInput] = useState(false);
   const [typeAction, setTypeAction] = useState('');
   const [autorite, setAutorite] = useState('');
   const [description, setDescription] = useState('');
@@ -32,6 +36,8 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [isLogin, setIsLogin] = useState(true);
   const [authLoading, setAuthLoading] = useState(true);
+  const [dossiersTab, setDossiersTab] = useState('tous'); // Onglet actuel des dossiers
+  const [expandedGroups, setExpandedGroups] = useState({}); // Groupes expandés
 
   const typesActions = [
     { label: 'Sélectionner un type...', value: '' },
@@ -72,6 +78,12 @@ export default function App() {
           { label: 'Père Noël', value: 'Père Noël' },
           { label: 'Lapin de Pâques', value: 'Lapin de Pâques' }
         ];
+        case 'Propriété intellectuelle':
+        return [
+          { label: 'Sélectionner une autorité...', value: '' },
+          { label: 'Bureau des brevets', value: 'Bureau des brevets' },
+          { label: 'Ton voisin', value: 'Ton voisin' }
+        ];
       default:
         return [{ label: 'Sélectionner d\'abord un type...', value: '' }];
     }
@@ -81,10 +93,17 @@ export default function App() {
     // Vérifier l'état d'authentification au démarrage
     const checkAuthState = async () => {
       try {
+        console.log('Vérification de la session existante...');
         const currentUser = await getCurrentUser();
-        setUser(currentUser);
+        if (currentUser) {
+          console.log('Session trouvée pour:', currentUser.email);
+          setUser(currentUser);
+        } else {
+          console.log('Aucune session active');
+        }
       } catch (error) {
         console.log('Erreur vérification auth:', error);
+        setUser(null);
       } finally {
         setAuthLoading(false);
       }
@@ -149,16 +168,31 @@ export default function App() {
   }, [typeAction]);
 
   useEffect(() => {
-    // Charger les balançages quand on passe au dashboard
-    if (currentTab === 'dashboard') {
+    // Charger les balançages et utilisateurs quand on passe au dashboard ou dossiers
+    if (currentTab === 'dashboard' || currentTab === 'dossiers') {
       loadBalancages();
+      loadUsers();
     }
   }, [currentTab]);
+
+  // Fonction utilitaire pour obtenir le nom de l'utilisateur
+  const getUserDisplayName = () => {
+    if (!user) return '';
+    return user.user_metadata?.nom || user.email?.split('@')[0] || '';
+  };
+
+  useEffect(() => {
+    // Charger les balançages et utilisateurs dès que l'utilisateur se connecte
+    if (user) {
+      loadBalancages();
+      loadUsers();
+    }
+  }, [user]);
 
   useEffect(() => {
     // Pré-remplir le nom du balanceur avec les infos de l'utilisateur connecté
     if (user && !nomBalanceur.trim()) {
-      const nomUtilisateur = user.user_metadata?.nom || user.email.split('@')[0];
+      const nomUtilisateur = getUserDisplayName();
       setNomBalanceur(nomUtilisateur);
     }
   }, [user, currentTab]);
@@ -166,9 +200,18 @@ export default function App() {
   const loadBalancages = async () => {
     try {
       if (useSupabase) {
-        // Charger depuis Supabase - tous les balançages (mode public)
-        // Note: Si RLS est activé, seuls les balançages de l'utilisateur seront visibles
+        // Charger depuis Supabase - TOUS les balançages (mode public)
+        console.log('Chargement de TOUS les balançages...');
+        console.log('Utilisateur actuel:', user?.email);
         const data = await getAllBalancages();
+        console.log(`${data?.length || 0} balançages récupérés`);
+        
+        // Debug: afficher les auteurs des balançages
+        if (data && data.length > 0) {
+          const auteurs = data.map(b => b.nom_balanceur).filter((v, i, a) => a.indexOf(v) === i);
+          console.log('Auteurs des balançages:', auteurs);
+        }
+        
         setBalancages(data || []);
       } else {
         // Charger depuis SQLite
@@ -179,6 +222,17 @@ export default function App() {
     } catch (error) {
       console.log('Erreur lors du chargement des balançages:', error);
       setBalancages([]);
+    }
+  };
+
+  // Charger la liste des utilisateurs
+  const loadUsers = async () => {
+    try {
+      const users = await getAllUsers();
+      setUsersList(users);
+    } catch (error) {
+      console.log('Erreur lors du chargement des utilisateurs:', error);
+      setUsersList([]);
     }
   };
 
@@ -205,6 +259,71 @@ export default function App() {
       .sort(([,a], [,b]) => b - a)
       .slice(0, 3)
       .map(([nom, count]) => ({ nom, count }));
+  };
+
+  // Calculer les statistiques par balanceur (top 3)
+  const getStatsParBalanceur = () => {
+    const stats = {};
+    balancages.forEach(balancage => {
+      const balanceur = balancage.nom_balanceur;
+      stats[balanceur] = (stats[balanceur] || 0) + 1;
+    });
+    
+    // Retourner les 3 balanceurs avec le plus d'activité
+    return Object.entries(stats)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 3)
+      .map(([nom, count]) => ({ nom, count }));
+  };
+
+  // Grouper les balançages par suspect
+  const getBalancagesParSuspect = () => {
+    const groups = {};
+    balancages.forEach(balancage => {
+      const suspect = balancage.nom_pote;
+      if (!groups[suspect]) {
+        groups[suspect] = [];
+      }
+      groups[suspect].push(balancage);
+    });
+    
+    // Trier par nombre de dossiers (décroissant)
+    return Object.entries(groups)
+      .sort(([,a], [,b]) => b.length - a.length)
+      .map(([nom, dossiers]) => ({
+        nom,
+        count: dossiers.length,
+        dossiers: dossiers.sort((a, b) => new Date(b.date_creation) - new Date(a.date_creation))
+      }));
+  };
+
+  // Grouper les balançages par balanceur
+  const getBalancagesParBalanceur = () => {
+    const groups = {};
+    balancages.forEach(balancage => {
+      const balanceur = balancage.nom_balanceur;
+      if (!groups[balanceur]) {
+        groups[balanceur] = [];
+      }
+      groups[balanceur].push(balancage);
+    });
+    
+    // Trier par nombre de dossiers (décroissant)
+    return Object.entries(groups)
+      .sort(([,a], [,b]) => b.length - a.length)
+      .map(([nom, dossiers]) => ({
+        nom,
+        count: dossiers.length,
+        dossiers: dossiers.sort((a, b) => new Date(b.date_creation) - new Date(a.date_creation))
+      }));
+  };
+
+  // Gérer l'expansion/réduction des groupes
+  const toggleExpanded = (groupKey) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupKey]: !prev[groupKey]
+    }));
   };
 
   const balancerPote = async () => {
@@ -246,14 +365,18 @@ export default function App() {
             text: 'Continuer l\'enquête',
             onPress: () => {
               setNomPote('');
-              setNomBalanceur('');
+              setShowNewSuspectInput(false);
+              // Ne pas vider le nom du balanceur, garder l'utilisateur connecté
+              setNomBalanceur(getUserDisplayName());
               setTypeAction('');
               setAutorite('');
               setDescription('');
-              // Recharger les balançages si on est sur le dashboard
-              if (currentTab === 'dashboard') {
+              // Recharger les balançages et utilisateurs si on est sur le dashboard ou dossiers
+              if (currentTab === 'dashboard' || currentTab === 'dossiers') {
                 loadBalancages();
               }
+              // Recharger la liste des utilisateurs car on a peut-être ajouté un nouveau nom
+              loadUsers();
             }
           }
         ]
@@ -315,7 +438,10 @@ export default function App() {
   const renderBalancageCard = ({ item }) => (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle}>🕵️ DOSSIER #{item.id}</Text>
+        <View style={styles.cardTitleContainer}>
+          <MaterialCommunityIcons name="folder-open" size={20} color="#D4AF37" />
+          <Text style={styles.cardTitle}>DOSSIER #{item.id}</Text>
+        </View>
         <Text style={styles.cardDate}>{formatDate(item.date_creation)}</Text>
       </View>
       
@@ -323,29 +449,44 @@ export default function App() {
         <View style={styles.infoGrid}>
           <View style={styles.infoRow}>
             <View style={styles.infoCell}>
-              <Text style={styles.infoLabel}>👤 SUSPECT</Text>
+              <View style={styles.infoLabelContainer}>
+                <Ionicons name="person" size={16} color="#8B0000" />
+                <Text style={styles.infoLabel}>SUSPECT</Text>
+              </View>
               <Text style={styles.infoValue}>{item.nom_pote}</Text>
             </View>
             <View style={styles.infoCell}>
-              <Text style={styles.infoLabel}>🗣️ DÉNONCÉ PAR</Text>
+              <View style={styles.infoLabelContainer}>
+                <MaterialIcons name="report" size={16} color="#8B0000" />
+                <Text style={styles.infoLabel}>DÉNONCÉ PAR</Text>
+              </View>
               <Text style={styles.infoValue}>{item.nom_balanceur}</Text>
             </View>
           </View>
           
           <View style={styles.infoRow}>
             <View style={styles.infoCell}>
-              <Text style={styles.infoLabel}>⚔️ CRIME</Text>
+              <View style={styles.infoLabelContainer}>
+                <MaterialIcons name="gavel" size={16} color="#8B0000" />
+                <Text style={styles.infoLabel}>CRIME</Text>
+              </View>
               <Text style={[styles.infoValue, styles.crimeType]}>{item.type_action}</Text>
             </View>
             <View style={styles.infoCell}>
-              <Text style={styles.infoLabel}>🏛️ AUTORITÉ</Text>
+              <View style={styles.infoLabelContainer}>
+                <MaterialCommunityIcons name="shield-star" size={16} color="#8B0000" />
+                <Text style={styles.infoLabel}>AUTORITÉ</Text>
+              </View>
               <Text style={styles.infoValue}>{item.autorite}</Text>
             </View>
           </View>
         </View>
         
         <View style={styles.descriptionSection}>
-          <Text style={styles.descriptionTitle}>📋 DÉTAILS DE L'ACCUSATION</Text>
+          <View style={styles.descriptionTitleContainer}>
+            <MaterialIcons name="description" size={18} color="#D4AF37" />
+            <Text style={styles.descriptionTitle}>DÉTAILS DE L'ACCUSATION</Text>
+          </View>
           <View style={styles.descriptionBox}>
             <Text style={styles.descriptionText}>{item.description}</Text>
           </View>
@@ -354,23 +495,109 @@ export default function App() {
     </View>
   );
 
+  // Composant pour les groupes expandables
+  const renderExpandableGroup = (group, type) => {
+    const groupKey = `${type}_${group.nom}`;
+    const isExpanded = expandedGroups[groupKey];
+    
+    return (
+      <View key={groupKey} style={styles.expandableGroup}>
+        <TouchableOpacity 
+          style={styles.expandableHeader}
+          onPress={() => toggleExpanded(groupKey)}
+        >
+          <View style={styles.expandableHeaderLeft}>
+            <MaterialIcons 
+              name={isExpanded ? "expand-less" : "expand-more"} 
+              size={24} 
+              color="#D4AF37" 
+            />
+            <View style={styles.expandableHeaderText}>
+              <Text style={styles.expandableTitle}>{group.nom}</Text>
+              <Text style={styles.expandableSubtitle}>
+                {group.count} dossier{group.count > 1 ? 's' : ''}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.expandableBadge}>
+            <Text style={styles.expandableBadgeText}>{group.count}</Text>
+          </View>
+        </TouchableOpacity>
+        
+        {isExpanded && (
+          <View style={styles.expandableContent}>
+            {group.dossiers.map((dossier) => (
+              <View key={dossier.id} style={styles.expandableCard}>
+                {renderBalancageCard({ item: dossier })}
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+    );
+  };
+
   const renderBalancerScreen = () => (
     <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
       <View style={styles.header}>
-        <Text style={styles.title}>🕵️ BALANCE TON POTE 🕵️</Text>
+        <View style={styles.titleContainer}>
+          <MaterialCommunityIcons name="target" size={28} color="#D4AF37" />
+          <Text style={styles.title}>BALANCE TON POTE</Text>
+          <MaterialCommunityIcons name="target" size={28} color="#D4AF37" />
+        </View>
         <Text style={styles.subtitle}>TRIBUNAL DE L'INQUISITION MODERNE</Text>
       </View>
 
       <View style={styles.form}>
         <View style={styles.inputContainer}>
           <Text style={styles.label}>NOM DU SUSPECT :</Text>
-          <TextInput
-            style={styles.input}
-            value={nomPote}
-            onChangeText={setNomPote}
-            placeholder="Identité du coupable..."
-            placeholderTextColor="#666"
-          />
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={showNewSuspectInput ? 'AUTRE' : nomPote}
+              style={styles.picker}
+              onValueChange={(value) => {
+                if (value === 'AUTRE') {
+                  setShowNewSuspectInput(true);
+                  setNomPote('');
+                } else {
+                  setShowNewSuspectInput(false);
+                  setNomPote(value);
+                }
+              }}
+              dropdownIconColor="#D4AF37"
+              mode="dialog"
+              prompt="Sélectionner un suspect"
+            >
+              <Picker.Item 
+                label="Sélectionner un suspect..." 
+                value="" 
+                color="#999"
+              />
+              {usersList.map((user, index) => (
+                <Picker.Item 
+                  key={index} 
+                  label={user} 
+                  value={user}
+                  color="#000"
+                />
+              ))}
+              <Picker.Item 
+                label="➕ Nouveau suspect..." 
+                value="AUTRE" 
+                color="#8B0000"
+              />
+            </Picker>
+          </View>
+          {showNewSuspectInput && (
+            <TextInput
+              style={[styles.input, { marginTop: 8 }]}
+              value={nomPote}
+              onChangeText={setNomPote}
+              placeholder="Saisir le nom du nouveau suspect..."
+              placeholderTextColor="#666"
+              autoFocus
+            />
+          )}
         </View>
 
         <View style={styles.inputContainer}>
@@ -392,6 +619,8 @@ export default function App() {
               style={styles.picker}
               onValueChange={setTypeAction}
               dropdownIconColor="#D4AF37"
+              mode="dialog"
+              prompt="Sélectionner le type de crime"
             >
               {typesActions.map((type, index) => (
                 <Picker.Item 
@@ -414,6 +643,8 @@ export default function App() {
               onValueChange={setAutorite}
               dropdownIconColor="#D4AF37"
               enabled={typeAction !== ''}
+              mode="dialog"
+              prompt="Sélectionner l'autorité compétente"
             >
               {getAutorites().map((auth, index) => (
                 <Picker.Item 
@@ -451,8 +682,12 @@ export default function App() {
   const renderDashboardScreen = () => (
     <View style={styles.dashboardContainer}>
       <View style={styles.header}>
-        <Text style={styles.title}>📋 DASHBOARD D'ENQUÊTE 📋</Text>
-        <Text style={styles.subtitle}>ARCHIVES DES BALANÇAGES</Text>
+        <View style={styles.titleContainer}>
+          <MaterialIcons name="analytics" size={28} color="#D4AF37" />
+          <Text style={styles.title}>DASHBOARD D'ENQUÊTE</Text>
+          <MaterialIcons name="analytics" size={28} color="#D4AF37" />
+        </View>
+        <Text style={styles.subtitle}>STATISTIQUES DU TRIBUNAL</Text>
       </View>
       
       <View style={styles.statsContainer}>
@@ -460,7 +695,7 @@ export default function App() {
           📊 TOTAL DES DOSSIERS : {balancages.length}
         </Text>
         
-        {balancages.length > 0 && (
+        {balancages.length > 0 ? (
           <>
             <View style={styles.statsSection}>
               <Text style={styles.statsSectionTitle}>🏷️ CRIMES PAR TYPE</Text>
@@ -489,26 +724,119 @@ export default function App() {
                 );
               })}
             </View>
+
+            <View style={styles.statsSection}>
+              <Text style={styles.statsSectionTitle}>🏅 TOP BALANCES</Text>
+              {getStatsParBalanceur().map((balanceur, index) => {
+                const percentage = Math.round((balanceur.count / balancages.length) * 100);
+                return (
+                  <View key={balanceur.nom} style={styles.statsRow}>
+                    <Text style={styles.statsLabel}>
+                      {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'} {balanceur.nom} :
+                    </Text>
+                    <Text style={styles.statsValue}>{balanceur.count} ({percentage}%)</Text>
+                  </View>
+                );
+              })}
+            </View>
           </>
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>📊</Text>
+            <Text style={styles.emptyStateTitle}>AUCUNE STATISTIQUE</Text>
+            <Text style={styles.emptyStateSubtitle}>
+              Les statistiques apparaîtront quand des dossiers seront créés
+            </Text>
+          </View>
         )}
+      </View>
+    </View>
+  );
+
+  const renderDossiersScreen = () => (
+    <View style={styles.dashboardContainer}>
+      <View style={styles.header}>
+        <View style={styles.titleContainer}>
+          <MaterialCommunityIcons name="folder-open" size={28} color="#D4AF37" />
+          <Text style={styles.title}>DOSSIERS D'ENQUÊTE</Text>
+          <MaterialCommunityIcons name="folder-open" size={28} color="#D4AF37" />
+        </View>
+        <Text style={styles.subtitle}>ARCHIVES DES BALANÇAGES</Text>
+      </View>
+
+      {/* Onglets des dossiers */}
+      <View style={styles.dossiersTabsContainer}>
+        <TouchableOpacity 
+          style={[styles.dossiersTab, dossiersTab === 'tous' && styles.dossiersTabActive]}
+          onPress={() => setDossiersTab('tous')}
+        >
+          <MaterialCommunityIcons 
+            name="folder-multiple" 
+            size={20} 
+            color={dossiersTab === 'tous' ? '#D4AF37' : '#666'} 
+          />
+          <Text style={[styles.dossiersTabText, dossiersTab === 'tous' && styles.dossiersTabTextActive]}>
+            TOUS
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.dossiersTab, dossiersTab === 'suspect' && styles.dossiersTabActive]}
+          onPress={() => setDossiersTab('suspect')}
+        >
+          <Ionicons 
+            name="person" 
+            size={20} 
+            color={dossiersTab === 'suspect' ? '#D4AF37' : '#666'} 
+          />
+          <Text style={[styles.dossiersTabText, dossiersTab === 'suspect' && styles.dossiersTabTextActive]}>
+            PAR SUSPECT
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.dossiersTab, dossiersTab === 'balance' && styles.dossiersTabActive]}
+          onPress={() => setDossiersTab('balance')}
+        >
+          <MaterialIcons 
+            name="report" 
+            size={20} 
+            color={dossiersTab === 'balance' ? '#D4AF37' : '#666'} 
+          />
+          <Text style={[styles.dossiersTabText, dossiersTab === 'balance' && styles.dossiersTabTextActive]}>
+            PAR BALANCE
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {balancages.length === 0 ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyStateText}>🕵️</Text>
-          <Text style={styles.emptyStateTitle}>AUCUN BALANÇAGE</Text>
+          <Text style={styles.emptyStateText}>🎯</Text>
+          <Text style={styles.emptyStateTitle}>AUCUN DOSSIER</Text>
           <Text style={styles.emptyStateSubtitle}>
             Commencez par dénoncer un suspect dans l'onglet "Balancer"
           </Text>
         </View>
       ) : (
-        <FlatList
-          data={balancages}
-          renderItem={renderBalancageCard}
-          keyExtractor={(item) => item.id.toString()}
-          style={styles.cardList}
-          showsVerticalScrollIndicator={false}
-        />
+        <View style={styles.dossiersContent}>
+          {dossiersTab === 'tous' ? (
+            <FlatList
+              data={balancages}
+              renderItem={renderBalancageCard}
+              keyExtractor={(item) => item.id.toString()}
+              style={styles.cardList}
+              showsVerticalScrollIndicator={false}
+            />
+          ) : dossiersTab === 'suspect' ? (
+            <ScrollView style={styles.expandableList} showsVerticalScrollIndicator={false}>
+              {getBalancagesParSuspect().map((group) => renderExpandableGroup(group, 'suspect'))}
+            </ScrollView>
+          ) : (
+            <ScrollView style={styles.expandableList} showsVerticalScrollIndicator={false}>
+              {getBalancagesParBalanceur().map((group) => renderExpandableGroup(group, 'balance'))}
+            </ScrollView>
+          )}
+        </View>
       )}
     </View>
   );
@@ -516,7 +844,11 @@ export default function App() {
   const renderSettingsScreen = () => (
     <View style={styles.settingsContainer}>
       <View style={styles.header}>
-        <Text style={styles.title}>⚙️ PARAMÈTRES ⚙️</Text>
+        <View style={styles.titleContainer}>
+          <Ionicons name="settings-sharp" size={28} color="#D4AF37" />
+          <Text style={styles.title}>PARAMÈTRES</Text>
+          <Ionicons name="settings-sharp" size={28} color="#D4AF37" />
+        </View>
         <Text style={styles.subtitle}>CONFIGURATION DU TRIBUNAL</Text>
       </View>
       
@@ -557,8 +889,11 @@ export default function App() {
       <SafeAreaView style={styles.container}>
         <StatusBar style="light" />
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>🕵️</Text>
-          <Text style={styles.loadingTitle}>BALANCE TON POTE</Text>
+          <Image 
+            source={require('./assets/images/logo.png')} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
           <Text style={styles.loadingSubtitle}>Vérification des autorisations...</Text>
         </View>
       </SafeAreaView>
@@ -587,6 +922,7 @@ export default function App() {
       {/* Contenu principal */}
       <View style={styles.mainContent}>
         {currentTab === 'balancer' ? renderBalancerScreen() : 
+         currentTab === 'dossiers' ? renderDossiersScreen() :
          currentTab === 'settings' ? renderSettingsScreen() : 
          renderDashboardScreen()}
       </View>
@@ -597,15 +933,35 @@ export default function App() {
           style={[styles.navTab, currentTab === 'dashboard' && styles.navTabActive]}
           onPress={() => setCurrentTab('dashboard')}
         >
-          <Text style={[styles.navIcon, currentTab === 'dashboard' && styles.navIconActive]}>📋</Text>
+          <MaterialIcons 
+            name="analytics" 
+            size={24} 
+            color={currentTab === 'dashboard' ? '#D4AF37' : '#666'} 
+          />
           <Text style={[styles.navLabel, currentTab === 'dashboard' && styles.navLabelActive]}>DASHBOARD</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.navTab, currentTab === 'dossiers' && styles.navTabActive]}
+          onPress={() => setCurrentTab('dossiers')}
+        >
+          <MaterialCommunityIcons 
+            name="folder-open" 
+            size={24} 
+            color={currentTab === 'dossiers' ? '#D4AF37' : '#666'} 
+          />
+          <Text style={[styles.navLabel, currentTab === 'dossiers' && styles.navLabelActive]}>DOSSIERS</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
           style={[styles.navTab, currentTab === 'balancer' && styles.navTabActive]}
           onPress={() => setCurrentTab('balancer')}
         >
-          <Text style={[styles.navIcon, currentTab === 'balancer' && styles.navIconActive]}>🕵️</Text>
+          <MaterialCommunityIcons 
+            name="target" 
+            size={24} 
+            color={currentTab === 'balancer' ? '#D4AF37' : '#666'} 
+          />
           <Text style={[styles.navLabel, currentTab === 'balancer' && styles.navLabelActive]}>BALANCER</Text>
         </TouchableOpacity>
 
@@ -613,7 +969,11 @@ export default function App() {
           style={[styles.navTab, currentTab === 'settings' && styles.navTabActive]}
           onPress={() => setCurrentTab('settings')}
         >
-          <Text style={[styles.navIcon, currentTab === 'settings' && styles.navIconActive]}>⚙️</Text>
+          <Ionicons 
+            name="settings-sharp" 
+            size={24} 
+            color={currentTab === 'settings' ? '#D4AF37' : '#666'} 
+          />
           <Text style={[styles.navLabel, currentTab === 'settings' && styles.navLabelActive]}>SETTINGS</Text>
         </TouchableOpacity>
       </View>
@@ -652,6 +1012,12 @@ const styles = StyleSheet.create({
     textShadowColor: '#8B0000',
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 4,
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 15,
   },
   subtitle: {
     fontSize: 14,
@@ -894,6 +1260,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
+  logo: {
+    width: 250,
+    height: 150,
+    marginBottom: 20,
+  },
   loadingText: {
     fontSize: 60,
     marginBottom: 20,
@@ -971,6 +1342,11 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
+  cardTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   cardDate: {
     color: '#FFFFFF',
     fontSize: 10,
@@ -995,11 +1371,16 @@ const styles = StyleSheet.create({
     borderLeftWidth: 3,
     borderLeftColor: '#D4AF37',
   },
+  infoLabelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 2,
+  },
   infoLabel: {
     color: '#D4AF37',
     fontSize: 10,
     fontWeight: 'bold',
-    marginBottom: 2,
     letterSpacing: 0.5,
     textShadowColor: '#000',
     textShadowOffset: { width: 1, height: 1 },
@@ -1014,11 +1395,16 @@ const styles = StyleSheet.create({
   descriptionSection: {
     marginTop: 2,
   },
+  descriptionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
   descriptionTitle: {
     color: '#D4AF37',
     fontSize: 11,
     fontWeight: 'bold',
-    marginBottom: 4,
     textShadowColor: '#000',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 1,
@@ -1105,4 +1491,112 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 10,
   },
+  // Styles pour les onglets des dossiers
+  dossiersTabsContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#1A1A1A',
+    borderWidth: 1,
+    borderColor: '#8B0000',
+    borderRadius: 8,
+    margin: 10,
+    marginTop: 0,
+    overflow: 'hidden',
+  },
+  dossiersTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    backgroundColor: 'transparent',
+    borderRightWidth: 1,
+    borderRightColor: '#8B0000',
+    gap: 6,
+  },
+  dossiersTabActive: {
+    backgroundColor: 'rgba(212, 175, 55, 0.15)',
+    borderTopWidth: 2,
+    borderTopColor: '#D4AF37',
+  },
+  dossiersTabText: {
+    color: '#666',
+    fontSize: 11,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  dossiersTabTextActive: {
+    color: '#D4AF37',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
+  },
+  dossiersContent: {
+    flex: 1,
+    marginHorizontal: 10,
+  },
+  // Styles pour les groupes expandables
+  expandableList: {
+    flex: 1,
+  },
+  expandableGroup: {
+    marginBottom: 8,
+    backgroundColor: '#1A1A1A',
+    borderWidth: 1,
+    borderColor: '#8B0000',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  expandableHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 15,
+    backgroundColor: '#2A2A2A',
+    borderBottomWidth: 1,
+    borderBottomColor: '#8B0000',
+  },
+  expandableHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 12,
+  },
+  expandableHeaderText: {
+    flex: 1,
+  },
+  expandableTitle: {
+    color: '#D4AF37',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  expandableSubtitle: {
+    color: '#CCCCCC',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  expandableBadge: {
+    backgroundColor: '#8B0000',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: '#D4AF37',
+  },
+  expandableBadgeText: {
+    color: '#D4AF37',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  expandableContent: {
+    backgroundColor: '#0A0A0A',
+    padding: 8,
+  },
+  expandableCard: {
+    marginBottom: 8,
+  },
 });
+

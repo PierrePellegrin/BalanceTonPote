@@ -10,7 +10,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
-  StatusBar
+  StatusBar,
+  Image
 } from 'react-native';
 
 const AuthScreen = ({ onLogin, onSwitchToRegister, isLogin = true }) => {
@@ -64,7 +65,11 @@ const AuthScreen = ({ onLogin, onSwitchToRegister, isLogin = true }) => {
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
-            <Text style={styles.title}>🕵️ BALANCE TON POTE 🕵️</Text>
+            <Image 
+              source={require('../assets/images/logo.png')} 
+              style={styles.logo}
+              resizeMode="contain"
+            />
             <Text style={styles.subtitle}>
               {isLogin ? 'IDENTIFICATION REQUISE' : 'NOUVEAU INFORMATEUR'}
             </Text>
@@ -174,6 +179,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: '#8B0000',
     paddingBottom: 20,
+  },
+  logo: {
+    width: 200,
+    height: 120,
+    marginBottom: 10,
   },
   title: {
     fontSize: 24,

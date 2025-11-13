@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ⚠️ IMPORTANT: Remplacez ces valeurs par vos vraies clés Supabase
 // Exemple: const SUPABASE_URL = 'https://abcdefghijklmnop.supabase.co';
@@ -11,7 +12,14 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // 3. Allez dans Settings > API
 // 4. Copiez "Project URL" et "anon public" key
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    storage: AsyncStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false
+  }
+});
 
 // Fonction pour créer la table si elle n'existe pas
 export const initializeDatabase = async () => {
@@ -60,16 +68,46 @@ export const insertBalancage = async (balancage) => {
 };
 
 export const getAllBalancages = async () => {
-  const { data, error } = await supabase
-    .from('balancages')
-    .select('*')
-    .order('date_creation', { ascending: false });
+  try {
+    // Essayons d'abord avec RPC si disponible, sinon fallback
+    try {
+      const { data: rpcData, error: rpcError } = await supabase
+        .rpc('get_all_balancages_public');
+      
+      if (!rpcError && rpcData) {
+        console.log('Données récupérées depuis Supabase (RPC):', rpcData?.length || 0, 'enregistrements');
+        return rpcData;
+      }
+    } catch (rpcError) {
+      console.log('RPC non disponible, utilisation de la méthode standard');
+    }
 
-  if (error) {
+    // Méthode standard - essai avec une requête simple
+    const { data, error } = await supabase
+      .from('balancages')
+      .select(`
+        id,
+        nom_pote,
+        nom_balanceur,
+        type_action,
+        autorite,
+        description,
+        date_creation,
+        user_id
+      `)
+      .order('date_creation', { ascending: false });
+
+    if (error) {
+      console.log('Erreur getAllBalancages:', error);
+      throw error;
+    }
+
+    console.log('Données récupérées depuis Supabase:', data?.length || 0, 'enregistrements');
+    return data;
+  } catch (error) {
+    console.log('Erreur dans getAllBalancages:', error);
     throw error;
   }
-
-  return data;
 };
 
 export const getBalancagesByUser = async (userId) => {
@@ -127,11 +165,72 @@ export const signOut = async () => {
 };
 
 export const getCurrentUser = async () => {
-  const { data: { user } } = await supabase.auth.getUser();
-  return user;
+  try {
+    // Vérifier d'abord la session locale
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (session?.user) {
+      console.log('Session locale trouvée:', session.user.email);
+      return session.user;
+    }
+    
+    // Si pas de session locale, essayer de récupérer l'utilisateur
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error) {
+      console.log('Erreur lors de la récupération de l\'utilisateur:', error);
+      return null;
+    }
+    
+    return user;
+  } catch (error) {
+    console.log('Erreur dans getCurrentUser:', error);
+    return null;
+  }
 };
 
 // Écouter les changements d'authentification
 export const onAuthStateChange = (callback) => {
   return supabase.auth.onAuthStateChange(callback);
+};
+
+// Fonction pour récupérer tous les utilisateurs distincts depuis les balançages
+export const getAllUsers = async () => {
+  try {
+    // Récupérer tous les noms de balanceurs uniques
+    const { data: balanceurs, error: errorBalanceurs } = await supabase
+      .from('balancages')
+      .select('nom_balanceur')
+      .not('nom_balanceur', 'is', null);
+
+    // Récupérer tous les noms de suspects uniques
+    const { data: suspects, error: errorSuspects } = await supabase
+      .from('balancages')
+      .select('nom_pote')
+      .not('nom_pote', 'is', null);
+
+    if (errorBalanceurs || errorSuspects) {
+      throw errorBalanceurs || errorSuspects;
+    }
+
+    // Combiner et dédupliquer les noms
+    const allNames = new Set();
+    
+    balanceurs?.forEach(item => {
+      if (item.nom_balanceur && item.nom_balanceur.trim()) {
+        allNames.add(item.nom_balanceur.trim());
+      }
+    });
+    
+    suspects?.forEach(item => {
+      if (item.nom_pote && item.nom_pote.trim()) {
+        allNames.add(item.nom_pote.trim());
+      }
+    });
+
+    return Array.from(allNames).sort();
+  } catch (error) {
+    console.log('Erreur lors de la récupération des utilisateurs:', error);
+    return [];
+  }
 };
