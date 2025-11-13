@@ -462,24 +462,30 @@ export default function App() {
           <>
             <View style={styles.statsSection}>
               <Text style={styles.statsSectionTitle}>🏷️ CRIMES PAR TYPE</Text>
-              {Object.entries(getStatsParType()).map(([type, count]) => (
-                <View key={type} style={styles.statsRow}>
-                  <Text style={styles.statsLabel}>{type} :</Text>
-                  <Text style={styles.statsValue}>{count}</Text>
-                </View>
-              ))}
+              {Object.entries(getStatsParType()).map(([type, count]) => {
+                const percentage = Math.round((count / balancages.length) * 100);
+                return (
+                  <View key={type} style={styles.statsRow}>
+                    <Text style={styles.statsLabel}>{type} :</Text>
+                    <Text style={styles.statsValue}>{count} ({percentage}%)</Text>
+                  </View>
+                );
+              })}
             </View>
 
             <View style={styles.statsSection}>
               <Text style={styles.statsSectionTitle}>🎯 TOP COUPABLES</Text>
-              {getStatsParCoupable().map((coupable, index) => (
-                <View key={coupable.nom} style={styles.statsRow}>
-                  <Text style={styles.statsLabel}>
-                    {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'} {coupable.nom} :
-                  </Text>
-                  <Text style={styles.statsValue}>{coupable.count}</Text>
-                </View>
-              ))}
+              {getStatsParCoupable().map((coupable, index) => {
+                const percentage = Math.round((coupable.count / balancages.length) * 100);
+                return (
+                  <View key={coupable.nom} style={styles.statsRow}>
+                    <Text style={styles.statsLabel}>
+                      {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'} {coupable.nom} :
+                    </Text>
+                    <Text style={styles.statsValue}>{coupable.count} ({percentage}%)</Text>
+                  </View>
+                );
+              })}
             </View>
           </>
         )}
@@ -840,14 +846,14 @@ const styles = StyleSheet.create({
   },
   statsLabel: {
     color: '#CCCCCC',
-    fontSize: 11,
+    fontSize: 13,
     flex: 1,
   },
   statsValue: {
     color: '#D4AF37',
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: 'bold',
-    minWidth: 25,
+    minWidth: 70,
     textAlign: 'right',
   },
   userInfo: {
