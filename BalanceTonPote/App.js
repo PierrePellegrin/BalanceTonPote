@@ -725,7 +725,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#1A1A1A',
     borderTopWidth: 2,
     borderTopColor: '#8B0000',
-    paddingVertical: 8,
+    paddingTop: 0,
+    paddingBottom: 8,
     paddingHorizontal: 0,
   },
   navTab: {
@@ -739,9 +740,10 @@ const styles = StyleSheet.create({
   },
   navTabActive: {
     borderBottomColor: '#D4AF37',
+    borderTopWidth: 2,
+    borderTopColor: '#D4AF37',
     backgroundColor: 'rgba(212, 175, 55, 0.1)',
-    position: 'relative',
-    top: -2,
+    marginTop: -2,
   },
   navIcon: {
     fontSize: 24,
