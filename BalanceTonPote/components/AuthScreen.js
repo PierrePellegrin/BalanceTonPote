@@ -8,7 +8,9 @@ import {
   StyleSheet,
   ScrollView,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  SafeAreaView,
+  StatusBar
 } from 'react-native';
 
 const AuthScreen = ({ onLogin, onSwitchToRegister, isLogin = true }) => {
@@ -54,17 +56,19 @@ const AuthScreen = ({ onLogin, onSwitchToRegister, isLogin = true }) => {
   };
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>🕵️ BALANCE TON POTE 🕵️</Text>
-          <Text style={styles.subtitle}>
-            {isLogin ? 'IDENTIFICATION REQUISE' : 'NOUVEAU INFORMATEUR'}
-          </Text>
-        </View>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.header}>
+            <Text style={styles.title}>🕵️ BALANCE TON POTE 🕵️</Text>
+            <Text style={styles.subtitle}>
+              {isLogin ? 'IDENTIFICATION REQUISE' : 'NOUVEAU INFORMATEUR'}
+            </Text>
+          </View>
 
         <View style={styles.form}>
           {!isLogin && (
@@ -143,8 +147,9 @@ const AuthScreen = ({ onLogin, onSwitchToRegister, isLogin = true }) => {
             </Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
@@ -153,14 +158,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0A0A0A',
   },
+  keyboardView: {
+    flex: 1,
+  },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
     padding: 20,
+    paddingTop: Platform.OS === 'android' ? 40 : 20,
   },
   header: {
     alignItems: 'center',
     marginBottom: 40,
+    marginTop: Platform.OS === 'android' ? 20 : 0,
     borderBottomWidth: 2,
     borderBottomColor: '#8B0000',
     paddingBottom: 20,

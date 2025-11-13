@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Balance Ton Pote",
-    "slug": "balance-ton-pote",
+    "slug": "temp-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -33,6 +33,7 @@
       "eas": {
         "projectId": "5450410b-3169-4270-b9bb-232208934791"
       }
-    }
+    },
+    "owner": "greattichonizuka"
   }
 }
