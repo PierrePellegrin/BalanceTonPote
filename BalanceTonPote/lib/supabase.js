@@ -2,8 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 
 // ⚠️ IMPORTANT: Remplacez ces valeurs par vos vraies clés Supabase
 // Exemple: const SUPABASE_URL = 'https://abcdefghijklmnop.supabase.co';
-const SUPABASE_URL = 'https://votre-projet.supabase.co'; // À remplacer
-const SUPABASE_ANON_KEY = 'your-anon-key-here'; // À remplacer
+const SUPABASE_URL = 'https://olycfliunmrpjumwtpux.supabase.co'; // À remplacer
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9seWNmbGl1bm1ycGp1bXd0cHV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwMjQ0MjcsImV4cCI6MjA3ODYwMDQyN30.53TaDkbBNtlO-mK7gjDd9X34ceSRBDmFBIrfGHnF9dY'; // À remplacer
 
 // 🔧 Pour obtenir ces valeurs :
 // 1. Allez sur https://supabase.com
