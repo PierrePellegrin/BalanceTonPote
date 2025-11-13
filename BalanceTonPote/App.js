@@ -319,30 +319,33 @@ export default function App() {
         <Text style={styles.cardDate}>{formatDate(item.date_creation)}</Text>
       </View>
       
-      <View style={styles.cardBody}>
-        <View style={styles.cardRow}>
-          <Text style={styles.cardLabel}>SUSPECT :</Text>
-          <Text style={styles.cardValue}>{item.nom_pote}</Text>
+      <View style={styles.cardGrid}>
+        <View style={styles.gridRow}>
+          <View style={styles.gridCell}>
+            <Text style={styles.gridLabel}>Suspect</Text>
+            <Text style={styles.gridValue}>{item.nom_pote}</Text>
+          </View>
+          <View style={styles.gridCell}>
+            <Text style={styles.gridLabel}>balance</Text>
+            <Text style={styles.gridValue}>{item.nom_balanceur}</Text>
+          </View>
         </View>
         
-        <View style={styles.cardRow}>
-          <Text style={styles.cardLabel}>DÉNONCÉ PAR :</Text>
-          <Text style={styles.cardValue}>{item.nom_balanceur}</Text>
+        <View style={styles.gridRow}>
+          <View style={styles.gridCell}>
+            <Text style={styles.gridLabel}>Type de crime</Text>
+            <Text style={[styles.gridValue, styles.crimeType]}>{item.type_action}</Text>
+          </View>
+          <View style={styles.gridCell}>
+            <Text style={styles.gridLabel}>Autorité</Text>
+            <Text style={styles.gridValue}>{item.autorite}</Text>
+          </View>
         </View>
         
-        <View style={styles.cardRow}>
-          <Text style={styles.cardLabel}>TYPE DE CRIME :</Text>
-          <Text style={[styles.cardValue, styles.crimeType]}>{item.type_action}</Text>
-        </View>
-        
-        <View style={styles.cardRow}>
-          <Text style={styles.cardLabel}>AUTORITÉ :</Text>
-          <Text style={styles.cardValue}>{item.autorite}</Text>
-        </View>
-        
-        <View style={styles.descriptionContainer}>
-          <Text style={styles.cardLabel}>DÉTAILS DE L'ACCUSATION :</Text>
-          <Text style={styles.cardDescription}>{item.description}</Text>
+        <View style={styles.gridFullRow}>
+          <Text style={styles.gridLabel}>Détail de l'accusation</Text>
+          <View style={styles.descriptionSeparator} />
+          <Text style={styles.gridDescription}>{item.description}</Text>
         </View>
       </View>
       
@@ -974,45 +977,48 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontStyle: 'italic',
   },
-  cardBody: {
-    padding: 12,
+  cardGrid: {
+    backgroundColor: '#FFFFFF',
+    padding: 15,
+    margin: 0,
   },
-  cardRow: {
+  gridRow: {
     flexDirection: 'row',
-    marginBottom: 6,
-    alignItems: 'center',
+    marginBottom: 15,
   },
-  cardLabel: {
-    color: '#D4AF37',
-    fontSize: 11,
-    fontWeight: '600',
-    width: 100,
-    textShadowColor: '#000',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 1,
-  },
-  cardValue: {
-    color: '#FFFFFF',
-    fontSize: 12,
+  gridCell: {
     flex: 1,
-    flexWrap: 'wrap',
+    marginHorizontal: 5,
+  },
+  gridFullRow: {
+    marginTop: 5,
+  },
+  gridLabel: {
+    color: '#000000',
+    fontSize: 12,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  gridValue: {
+    color: '#000000',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  gridDescription: {
+    color: '#000000',
+    fontSize: 12,
+    lineHeight: 16,
+    marginTop: 8,
+  },
+  descriptionSeparator: {
+    height: 1,
+    backgroundColor: '#000000',
+    marginTop: 8,
+    width: '100%',
   },
   crimeType: {
-    color: '#FF6B6B',
+    color: '#FF0000',
     fontWeight: 'bold',
-  },
-  descriptionContainer: {
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#333',
-  },
-  cardDescription: {
-    color: '#CCCCCC',
-    fontSize: 11,
-    lineHeight: 16,
-    marginTop: 4,
-    fontStyle: 'italic',
   },
   cardFooter: {
     backgroundColor: '#2A2A2A',
