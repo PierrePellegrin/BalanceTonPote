@@ -323,22 +323,22 @@ export default function App() {
         <View style={styles.infoGrid}>
           <View style={styles.infoRow}>
             <View style={styles.infoCell}>
-              <Text style={styles.infoLabel}>SUSPECT</Text>
+              <Text style={styles.infoLabel}>👤 SUSPECT</Text>
               <Text style={styles.infoValue}>{item.nom_pote}</Text>
             </View>
             <View style={styles.infoCell}>
-              <Text style={styles.infoLabel}>DÉNONCÉ PAR</Text>
+              <Text style={styles.infoLabel}>🗣️ DÉNONCÉ PAR</Text>
               <Text style={styles.infoValue}>{item.nom_balanceur}</Text>
             </View>
           </View>
           
           <View style={styles.infoRow}>
             <View style={styles.infoCell}>
-              <Text style={styles.infoLabel}>CRIME</Text>
+              <Text style={styles.infoLabel}>⚔️ CRIME</Text>
               <Text style={[styles.infoValue, styles.crimeType]}>{item.type_action}</Text>
             </View>
             <View style={styles.infoCell}>
-              <Text style={styles.infoLabel}>AUTORITÉ</Text>
+              <Text style={styles.infoLabel}>🏛️ AUTORITÉ</Text>
               <Text style={styles.infoValue}>{item.autorite}</Text>
             </View>
           </View>
@@ -350,10 +350,6 @@ export default function App() {
             <Text style={styles.descriptionText}>{item.description}</Text>
           </View>
         </View>
-      </View>
-      
-      <View style={styles.cardFooter}>
-        <Text style={styles.cardStatus}>⚖️ DOSSIER TRANSMIS</Text>
       </View>
     </View>
   );
@@ -960,7 +956,7 @@ const styles = StyleSheet.create({
   },
   cardHeader: {
     backgroundColor: '#8B0000',
-    padding: 10,
+    padding: 6,
     borderTopLeftRadius: 7,
     borderTopRightRadius: 7,
     flexDirection: 'row',
@@ -981,20 +977,20 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   cardBody: {
-    padding: 15,
+    padding: 8,
   },
   infoGrid: {
-    marginBottom: 15,
+    marginBottom: 8,
   },
   infoRow: {
     flexDirection: 'row',
-    marginBottom: 12,
+    marginBottom: 6,
   },
   infoCell: {
     flex: 1,
     backgroundColor: '#2A2A2A',
     marginHorizontal: 4,
-    padding: 10,
+    padding: 6,
     borderRadius: 6,
     borderLeftWidth: 3,
     borderLeftColor: '#D4AF37',
@@ -1003,7 +999,7 @@ const styles = StyleSheet.create({
     color: '#D4AF37',
     fontSize: 10,
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginBottom: 2,
     letterSpacing: 0.5,
     textShadowColor: '#000',
     textShadowOffset: { width: 1, height: 1 },
@@ -1016,20 +1012,20 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   descriptionSection: {
-    marginTop: 5,
+    marginTop: 2,
   },
   descriptionTitle: {
     color: '#D4AF37',
     fontSize: 11,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 4,
     textShadowColor: '#000',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 1,
   },
   descriptionBox: {
     backgroundColor: '#2A2A2A',
-    padding: 12,
+    padding: 8,
     borderRadius: 6,
     borderLeftWidth: 3,
     borderLeftColor: '#8B0000',
