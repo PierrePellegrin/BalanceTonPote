@@ -319,33 +319,36 @@ export default function App() {
         <Text style={styles.cardDate}>{formatDate(item.date_creation)}</Text>
       </View>
       
-      <View style={styles.cardGrid}>
-        <View style={styles.gridRow}>
-          <View style={styles.gridCell}>
-            <Text style={styles.gridLabel}>Suspect</Text>
-            <Text style={styles.gridValue}>{item.nom_pote}</Text>
+      <View style={styles.cardBody}>
+        <View style={styles.infoGrid}>
+          <View style={styles.infoRow}>
+            <View style={styles.infoCell}>
+              <Text style={styles.infoLabel}>SUSPECT</Text>
+              <Text style={styles.infoValue}>{item.nom_pote}</Text>
+            </View>
+            <View style={styles.infoCell}>
+              <Text style={styles.infoLabel}>DÉNONCÉ PAR</Text>
+              <Text style={styles.infoValue}>{item.nom_balanceur}</Text>
+            </View>
           </View>
-          <View style={styles.gridCell}>
-            <Text style={styles.gridLabel}>balance</Text>
-            <Text style={styles.gridValue}>{item.nom_balanceur}</Text>
+          
+          <View style={styles.infoRow}>
+            <View style={styles.infoCell}>
+              <Text style={styles.infoLabel}>CRIME</Text>
+              <Text style={[styles.infoValue, styles.crimeType]}>{item.type_action}</Text>
+            </View>
+            <View style={styles.infoCell}>
+              <Text style={styles.infoLabel}>AUTORITÉ</Text>
+              <Text style={styles.infoValue}>{item.autorite}</Text>
+            </View>
           </View>
         </View>
         
-        <View style={styles.gridRow}>
-          <View style={styles.gridCell}>
-            <Text style={styles.gridLabel}>Type de crime</Text>
-            <Text style={[styles.gridValue, styles.crimeType]}>{item.type_action}</Text>
+        <View style={styles.descriptionSection}>
+          <Text style={styles.descriptionTitle}>📋 DÉTAILS DE L'ACCUSATION</Text>
+          <View style={styles.descriptionBox}>
+            <Text style={styles.descriptionText}>{item.description}</Text>
           </View>
-          <View style={styles.gridCell}>
-            <Text style={styles.gridLabel}>Autorité</Text>
-            <Text style={styles.gridValue}>{item.autorite}</Text>
-          </View>
-        </View>
-        
-        <View style={styles.gridFullRow}>
-          <Text style={styles.gridLabel}>Détail de l'accusation</Text>
-          <View style={styles.descriptionSeparator} />
-          <Text style={styles.gridDescription}>{item.description}</Text>
         </View>
       </View>
       
@@ -977,47 +980,68 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontStyle: 'italic',
   },
-  cardGrid: {
-    backgroundColor: '#FFFFFF',
+  cardBody: {
     padding: 15,
-    margin: 0,
   },
-  gridRow: {
-    flexDirection: 'row',
+  infoGrid: {
     marginBottom: 15,
   },
-  gridCell: {
+  infoRow: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  infoCell: {
     flex: 1,
-    marginHorizontal: 5,
+    backgroundColor: '#2A2A2A',
+    marginHorizontal: 4,
+    padding: 10,
+    borderRadius: 6,
+    borderLeftWidth: 3,
+    borderLeftColor: '#D4AF37',
   },
-  gridFullRow: {
-    marginTop: 5,
-  },
-  gridLabel: {
-    color: '#000000',
-    fontSize: 12,
-    fontWeight: '500',
+  infoLabel: {
+    color: '#D4AF37',
+    fontSize: 10,
+    fontWeight: 'bold',
     marginBottom: 4,
+    letterSpacing: 0.5,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
   },
-  gridValue: {
-    color: '#000000',
+  infoValue: {
+    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '600',
+    lineHeight: 18,
   },
-  gridDescription: {
-    color: '#000000',
+  descriptionSection: {
+    marginTop: 5,
+  },
+  descriptionTitle: {
+    color: '#D4AF37',
+    fontSize: 11,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
+  },
+  descriptionBox: {
+    backgroundColor: '#2A2A2A',
+    padding: 12,
+    borderRadius: 6,
+    borderLeftWidth: 3,
+    borderLeftColor: '#8B0000',
+  },
+  descriptionText: {
+    color: '#CCCCCC',
     fontSize: 12,
     lineHeight: 16,
-    marginTop: 8,
-  },
-  descriptionSeparator: {
-    height: 1,
-    backgroundColor: '#000000',
-    marginTop: 8,
-    width: '100%',
+    fontStyle: 'italic',
   },
   crimeType: {
-    color: '#FF0000',
+    color: '#FF6B6B',
     fontWeight: 'bold',
   },
   cardFooter: {
