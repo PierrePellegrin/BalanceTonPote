@@ -14,7 +14,8 @@ import { StatusBar } from 'expo-status-bar';
 import { Picker } from '@react-native-picker/picker';
 import * as SQLite from 'expo-sqlite';
 import { Platform } from 'react-native';
-import { supabase, initializeDatabase, insertBalancage, getAllBalancages } from './lib/supabase';
+import { supabase, initializeDatabase, insertBalancage, getAllBalancages, signUp, signIn, signOut, getCurrentUser, onAuthStateChange } from './lib/supabase';
+import AuthScreen from './components/AuthScreen';
 
 let db;
 
@@ -28,6 +29,9 @@ export default function App() {
   const [balancages, setBalancages] = useState([]);
   const [useSupabase, setUseSupabase] = useState(true); // Toujours utiliser Supabase par défaut
   const [connectionStatus, setConnectionStatus] = useState('connecting');
+  const [user, setUser] = useState(null);
+  const [isLogin, setIsLogin] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
 
   const typesActions = [
     { label: 'Sélectionner un type...', value: '' },
@@ -72,6 +76,34 @@ export default function App() {
         return [{ label: 'Sélectionner d\'abord un type...', value: '' }];
     }
   };
+
+  useEffect(() => {
+    // Vérifier l'état d'authentification au démarrage
+    const checkAuthState = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
+      } catch (error) {
+        console.log('Erreur vérification auth:', error);
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+
+    checkAuthState();
+
+    // Écouter les changements d'authentification
+    const { data: { subscription } } = onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      if (event === 'SIGNED_IN') {
+        console.log('Utilisateur connecté:', session.user.email);
+      } else if (event === 'SIGNED_OUT') {
+        console.log('Utilisateur déconnecté');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     // Initialiser la base de données - Priorité à Supabase pour partage multi-utilisateurs
@@ -126,7 +158,8 @@ export default function App() {
   const loadBalancages = async () => {
     try {
       if (useSupabase) {
-        // Charger depuis Supabase
+        // Charger depuis Supabase - tous les balançages (mode public)
+        // Note: Si RLS est activé, seuls les balançages de l'utilisateur seront visibles
         const data = await getAllBalancages();
         setBalancages(data || []);
       } else {
@@ -153,7 +186,8 @@ export default function App() {
         nom_balanceur: nomBalanceur.trim(),
         type_action: typeAction,
         autorite: autorite,
-        description: description.trim()
+        description: description.trim(),
+        user_id: user?.id // Ajouter l'ID de l'utilisateur connecté
       };
 
       if (useSupabase) {
@@ -209,6 +243,29 @@ export default function App() {
       setUseSupabase(false);
       setConnectionStatus('offline');
       Alert.alert('❌ Connexion Échouée', 'Impossible de se connecter à la base partagée. Mode offline maintenu.');
+    }
+  };
+
+  const handleAuth = async (email, password, nom = null) => {
+    try {
+      if (isLogin) {
+        const { user } = await signIn(email, password);
+        Alert.alert('✅ Connexion Réussie', `Bienvenue ${user.email} !`);
+      } else {
+        const { user } = await signUp(email, password, nom);
+        Alert.alert('✅ Compte Créé', 'Vérifiez votre email pour confirmer votre compte.');
+      }
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      Alert.alert('👋 Déconnexion', 'À bientôt !');
+    } catch (error) {
+      Alert.alert('Erreur', 'Erreur lors de la déconnexion');
     }
   };
 
@@ -378,6 +435,16 @@ export default function App() {
             👥 Base partagée - Visible par tous les utilisateurs
           </Text>
         )}
+        {user && (
+          <View style={styles.userInfo}>
+            <Text style={styles.userInfoText}>
+              👤 Connecté : {user.user_metadata?.nom || user.email}
+            </Text>
+            <TouchableOpacity style={styles.logoutButton} onPress={handleSignOut}>
+              <Text style={styles.logoutButtonText}>🚪 Déconnexion</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       {balancages.length === 0 ? (
@@ -400,6 +467,35 @@ export default function App() {
     </View>
   );
 
+  // Affichage de chargement
+  if (authLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar style="light" />
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>🕵️</Text>
+          <Text style={styles.loadingTitle}>BALANCE TON POTE</Text>
+          <Text style={styles.loadingSubtitle}>Vérification des autorisations...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Affichage de l'authentification si pas connecté
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar style="light" />
+        <AuthScreen 
+          onLogin={handleAuth}
+          onSwitchToRegister={() => setIsLogin(!isLogin)}
+          isLogin={isLogin}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  // Affichage principal de l'application
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
@@ -624,6 +720,59 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     marginTop: 5,
+  },
+  userInfo: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  userInfoText: {
+    color: '#D4AF37',
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  logoutButton: {
+    backgroundColor: '#8B0000',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#D4AF37',
+  },
+  logoutButtonText: {
+    color: '#D4AF37',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    fontSize: 60,
+    marginBottom: 20,
+  },
+  loadingTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#D4AF37',
+    textAlign: 'center',
+    textShadowColor: '#8B0000',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
+    marginBottom: 10,
+  },
+  loadingSubtitle: {
+    fontSize: 14,
+    color: '#8B0000',
+    fontWeight: '600',
+    letterSpacing: 2,
+    textAlign: 'center',
   },
   emptyState: {
     flex: 1,

@@ -1,9 +1,17 @@
 # 🕵️ BalanceTonPote - Application d'Inquisition Moderne
 
-Une application React Native permettant de "balancer" ses potes en enregistrant leurs méfaits dans une base de données SQLite locale avec un thème "inquisition" criminalistique.
+Application React Native avec **authentification multi-utilisateurs** permettant de "balancer" ses potes en enregistrant leurs méfaits dans une base de données cloud Supabase avec un thème "inquisition" criminalistique.
 
 ## 📱 Fonctionnalités
 
+### 🔐 Authentification Complète
+- **Inscription** : Créer un nouveau compte utilisateur
+- **Connexion** : Se connecter avec email/mot de passe
+- **Déconnexion** : Bouton de déconnexion sécurisé
+- **Sessions persistantes** : Reconnexion automatique
+- **Multi-utilisateurs** : Plusieurs comptes peuvent coexister
+
+### 🕵️ Balançage de Potes
 - **Interface unique** avec thème sombre "inquisition"
 - **Saisie du suspect** : nom du pote à balancer
 - **Identification du dénonciateur** : nom de celui qui balance
@@ -18,7 +26,14 @@ Une application React Native permettant de "balancer" ses potes en enregistrant 
   - **Adultère** : Femme, Conjointe, Belle mère
   - **Mauvaise action** : Père Noël, Lapin de Pâques
 - **Description détaillée** de l'action répréhensible
-- **Sauvegarde automatique** en base SQLite locale
+- **Sauvegarde cloud automatique** avec Supabase
+
+### 📋 Dashboard d'Enquête
+- **Liste des balançages** : Historique complet
+- **Navigation par onglets** : Dashboard / Balancer
+- **Indicateur de connexion** : Online/Offline
+- **Informations utilisateur** : Profil et déconnexion
+- **Mode sécurisé** : Chaque utilisateur voit ses propres balançages (avec RLS)
 
 ## 🚀 Installation et Lancement
 

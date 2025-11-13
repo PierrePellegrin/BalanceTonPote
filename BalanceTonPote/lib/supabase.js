@@ -47,6 +47,7 @@ export const insertBalancage = async (balancage) => {
         type_action: balancage.type_action,
         autorite: balancage.autorite,
         description: balancage.description,
+        user_id: balancage.user_id,
         date_creation: new Date().toISOString()
       }
     ]);
@@ -69,4 +70,68 @@ export const getAllBalancages = async () => {
   }
 
   return data;
+};
+
+export const getBalancagesByUser = async (userId) => {
+  const { data, error } = await supabase
+    .from('balancages')
+    .select('*')
+    .eq('user_id', userId)
+    .order('date_creation', { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+};
+
+// 🔐 Fonctions d'authentification
+export const signUp = async (email, password, nom) => {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        nom: nom,
+      }
+    }
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+};
+
+export const signIn = async (email, password) => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+};
+
+export const signOut = async () => {
+  const { error } = await supabase.auth.signOut();
+  
+  if (error) {
+    throw error;
+  }
+};
+
+export const getCurrentUser = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+};
+
+// Écouter les changements d'authentification
+export const onAuthStateChange = (callback) => {
+  return supabase.auth.onAuthStateChange(callback);
 };
