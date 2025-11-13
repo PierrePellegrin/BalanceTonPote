@@ -846,12 +846,12 @@ const styles = StyleSheet.create({
   },
   statsLabel: {
     color: '#CCCCCC',
-    fontSize: 13,
+    fontSize: 14,
     flex: 1,
   },
   statsValue: {
     color: '#D4AF37',
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: 'bold',
     minWidth: 70,
     textAlign: 'right',
