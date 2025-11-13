@@ -155,6 +155,14 @@ export default function App() {
     }
   }, [currentTab]);
 
+  useEffect(() => {
+    // Pré-remplir le nom du balanceur avec les infos de l'utilisateur connecté
+    if (user && !nomBalanceur.trim()) {
+      const nomUtilisateur = user.user_metadata?.nom || user.email.split('@')[0];
+      setNomBalanceur(nomUtilisateur);
+    }
+  }, [user, currentTab]);
+
   const loadBalancages = async () => {
     try {
       if (useSupabase) {
@@ -564,30 +572,27 @@ export default function App() {
       {/* Menu de navigation en bas */}
       <View style={styles.bottomNavigation}>
         <TouchableOpacity 
-          style={[styles.navButton, currentTab === 'dashboard' && styles.navButtonActive]}
+          style={[styles.navTab, currentTab === 'dashboard' && styles.navTabActive]}
           onPress={() => setCurrentTab('dashboard')}
         >
-          <Text style={[styles.navButtonText, currentTab === 'dashboard' && styles.navButtonTextActive]}>
-            📋 DASHBOARD
-          </Text>
+          <Text style={[styles.navIcon, currentTab === 'dashboard' && styles.navIconActive]}>📋</Text>
+          <Text style={[styles.navLabel, currentTab === 'dashboard' && styles.navLabelActive]}>DASHBOARD</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
-          style={[styles.navButton, currentTab === 'balancer' && styles.navButtonActive]}
+          style={[styles.navTab, currentTab === 'balancer' && styles.navTabActive]}
           onPress={() => setCurrentTab('balancer')}
         >
-          <Text style={[styles.navButtonText, currentTab === 'balancer' && styles.navButtonTextActive]}>
-            🕵️ BALANCER
-          </Text>
+          <Text style={[styles.navIcon, currentTab === 'balancer' && styles.navIconActive]}>🕵️</Text>
+          <Text style={[styles.navLabel, currentTab === 'balancer' && styles.navLabelActive]}>BALANCER</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
-          style={[styles.navButton, currentTab === 'settings' && styles.navButtonActive]}
+          style={[styles.navTab, currentTab === 'settings' && styles.navTabActive]}
           onPress={() => setCurrentTab('settings')}
         >
-          <Text style={[styles.navButtonText, currentTab === 'settings' && styles.navButtonTextActive]}>
-            ⚙️ SETTINGS
-          </Text>
+          <Text style={[styles.navIcon, currentTab === 'settings' && styles.navIconActive]}>⚙️</Text>
+          <Text style={[styles.navLabel, currentTab === 'settings' && styles.navLabelActive]}>SETTINGS</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -615,7 +620,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: '#8B0000',
     paddingBottom: 20,
-    paddingTop: 20, // Espace pour éviter les icônes Android
+    paddingTop: 40, // Espace augmenté pour éviter les icônes Android
   },
   title: {
     fontSize: 24,
@@ -700,36 +705,41 @@ const styles = StyleSheet.create({
     backgroundColor: '#1A1A1A',
     borderTopWidth: 2,
     borderTopColor: '#8B0000',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 0,
   },
-  navButton: {
+  navTab: {
     flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginHorizontal: 5,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#8B0000',
+    paddingVertical: 8,
     alignItems: 'center',
-    backgroundColor: '#0A0A0A',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+    borderBottomWidth: 3,
+    borderBottomColor: 'transparent',
   },
-  navButtonActive: {
-    backgroundColor: '#8B0000',
-    borderColor: '#D4AF37',
-    shadowColor: '#D4AF37',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.6,
-    shadowRadius: 4,
-    elevation: 4,
+  navTabActive: {
+    borderBottomColor: '#D4AF37',
+    backgroundColor: 'rgba(212, 175, 55, 0.1)',
   },
-  navButtonText: {
+  navIcon: {
+    fontSize: 24,
+    marginBottom: 4,
     color: '#8B0000',
-    fontSize: 14,
+  },
+  navIconActive: {
+    color: '#D4AF37',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  navLabel: {
+    color: '#8B0000',
+    fontSize: 10,
     fontWeight: 'bold',
     textAlign: 'center',
+    letterSpacing: 0.5,
   },
-  navButtonTextActive: {
+  navLabelActive: {
     color: '#D4AF37',
     textShadowColor: '#000',
     textShadowOffset: { width: 1, height: 1 },
