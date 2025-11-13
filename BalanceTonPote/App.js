@@ -253,7 +253,12 @@ export default function App() {
         Alert.alert('✅ Connexion Réussie', `Bienvenue ${user.email} !`);
       } else {
         const { user } = await signUp(email, password, nom);
-        Alert.alert('✅ Compte Créé', 'Vérifiez votre email pour confirmer votre compte.');
+        Alert.alert('✅ Compte Créé', 'Vérifiez votre email pour confirmer votre compte. Vous pouvez maintenant vous connecter.', [
+          {
+            text: 'Se connecter',
+            onPress: () => setIsLogin(true) // Rediriger vers la page de login
+          }
+        ]);
       }
     } catch (error) {
       throw new Error(error.message);
