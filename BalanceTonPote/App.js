@@ -771,7 +771,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 15,
     marginBottom: 20,
-    alignItems: 'center',
+    alignItems: 'stretch',
   },
   statsText: {
     color: '#D4AF37',
@@ -818,7 +818,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 12,
     marginTop: 12,
-    marginHorizontal: 0,
+    width: '100%',
+    alignSelf: 'stretch',
   },
   statsSectionTitle: {
     color: '#D4AF37',
