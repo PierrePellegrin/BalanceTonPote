@@ -734,10 +734,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
+    borderTopWidth: 3,
+    borderTopColor: 'transparent',
     borderBottomWidth: 3,
     borderBottomColor: 'transparent',
   },
   navTabActive: {
+    borderTopColor: '#D4AF37',
     borderBottomColor: '#D4AF37',
     backgroundColor: 'rgba(212, 175, 55, 0.1)',
   },
