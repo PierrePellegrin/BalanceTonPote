@@ -13,6 +13,8 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { Picker } from '@react-native-picker/picker';
 import * as SQLite from 'expo-sqlite';
+import { Platform } from 'react-native';
+import { supabase, initializeDatabase, insertBalancage, getAllBalancages } from './lib/supabase';
 
 let db;
 
@@ -24,6 +26,7 @@ export default function App() {
   const [autorite, setAutorite] = useState('');
   const [description, setDescription] = useState('');
   const [balancages, setBalancages] = useState([]);
+  const [useSupabase, setUseSupabase] = useState(Platform.OS === 'web');
 
   const typesActions = [
     { label: 'Sélectionner un type...', value: '' },
@@ -70,29 +73,43 @@ export default function App() {
   };
 
   useEffect(() => {
-    // Initialiser la base de données avec la nouvelle API
+    // Initialiser la base de données selon la plateforme
     const initDatabase = async () => {
-      try {
-        db = await SQLite.openDatabaseAsync('balanceTonPote.db');
-        await db.execAsync(`
-          CREATE TABLE IF NOT EXISTS balancages (
-            id INTEGER PRIMARY KEY AUTOINCREMENT, 
-            nom_pote TEXT, 
-            nom_balanceur TEXT, 
-            type_action TEXT, 
-            autorite TEXT, 
-            description TEXT, 
-            date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
-          );
-        `);
-        console.log('Base de données initialisée avec succès');
-      } catch (error) {
-        console.log('Erreur lors de l\'initialisation de la base de données:', error);
+      if (useSupabase) {
+        // Utiliser Supabase pour le web
+        try {
+          await initializeDatabase();
+          console.log('Supabase initialisé pour le web');
+        } catch (error) {
+          console.log('Erreur Supabase, fallback vers SQLite local:', error);
+          setUseSupabase(false);
+        }
+      }
+      
+      if (!useSupabase) {
+        // Utiliser SQLite pour mobile ou fallback
+        try {
+          db = await SQLite.openDatabaseAsync('balanceTonPote.db');
+          await db.execAsync(`
+            CREATE TABLE IF NOT EXISTS balancages (
+              id INTEGER PRIMARY KEY AUTOINCREMENT, 
+              nom_pote TEXT, 
+              nom_balanceur TEXT, 
+              type_action TEXT, 
+              autorite TEXT, 
+              description TEXT, 
+              date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+          `);
+          console.log('Base de données SQLite initialisée avec succès');
+        } catch (error) {
+          console.log('Erreur lors de l\'initialisation SQLite:', error);
+        }
       }
     };
     
     initDatabase();
-  }, []);
+  }, [useSupabase]);
 
   useEffect(() => {
     // Reset l'autorité quand le type d'action change
@@ -107,13 +124,20 @@ export default function App() {
   }, [currentTab]);
 
   const loadBalancages = async () => {
-    if (!db) return;
-    
     try {
-      const result = await db.getAllAsync('SELECT * FROM balancages ORDER BY date_creation DESC');
-      setBalancages(result);
+      if (useSupabase) {
+        // Charger depuis Supabase
+        const data = await getAllBalancages();
+        setBalancages(data || []);
+      } else {
+        // Charger depuis SQLite
+        if (!db) return;
+        const result = await db.getAllAsync('SELECT * FROM balancages ORDER BY date_creation DESC');
+        setBalancages(result || []);
+      }
     } catch (error) {
       console.log('Erreur lors du chargement des balançages:', error);
+      setBalancages([]);
     }
   };
 
@@ -123,16 +147,29 @@ export default function App() {
       return;
     }
 
-    if (!db) {
-      Alert.alert('Erreur', 'Base de données non initialisée');
-      return;
-    }
-
     try {
-      await db.runAsync(
-        'INSERT INTO balancages (nom_pote, nom_balanceur, type_action, autorite, description) VALUES (?, ?, ?, ?, ?)',
-        [nomPote.trim(), nomBalanceur.trim(), typeAction, autorite, description.trim()]
-      );
+      const balancageData = {
+        nom_pote: nomPote.trim(),
+        nom_balanceur: nomBalanceur.trim(),
+        type_action: typeAction,
+        autorite: autorite,
+        description: description.trim()
+      };
+
+      if (useSupabase) {
+        // Sauvegarder via Supabase
+        await insertBalancage(balancageData);
+      } else {
+        // Sauvegarder via SQLite
+        if (!db) {
+          Alert.alert('Erreur', 'Base de données non initialisée');
+          return;
+        }
+        await db.runAsync(
+          'INSERT INTO balancages (nom_pote, nom_balanceur, type_action, autorite, description) VALUES (?, ?, ?, ?, ?)',
+          [balancageData.nom_pote, balancageData.nom_balanceur, balancageData.type_action, balancageData.autorite, balancageData.description]
+        );
+      }
       
       Alert.alert(
         'Balançage Effectué !', 
@@ -155,8 +192,8 @@ export default function App() {
         ]
       );
     } catch (error) {
-      Alert.alert('Erreur', 'Échec de l\'enregistrement du balançage');
-      console.log('Erreur SQL:', error);
+      Alert.alert('Erreur', 'Échec de l\'enregistrement du balançage: ' + error.message);
+      console.log('Erreur:', error);
     }
   };
 
@@ -309,6 +346,9 @@ export default function App() {
       <View style={styles.statsContainer}>
         <Text style={styles.statsText}>
           📊 TOTAL DES DOSSIERS : {balancages.length}
+        </Text>
+        <Text style={styles.dbIndicator}>
+          🗄️ Base : {useSupabase ? 'Supabase (Cloud)' : 'SQLite (Local)'}
         </Text>
       </View>
 
@@ -526,6 +566,13 @@ const styles = StyleSheet.create({
     textShadowColor: '#000',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
+  },
+  dbIndicator: {
+    color: '#8B0000',
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginTop: 5,
+    textAlign: 'center',
   },
   emptyState: {
     flex: 1,

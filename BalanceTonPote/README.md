@@ -53,7 +53,9 @@ Puis scannez le QR code avec l'app Expo Go sur votre téléphone.
 ## 🛠️ Technologies Utilisées
 
 - **React Native** avec Expo
-- **SQLite** (expo-sqlite) pour la base de données embarquée
+- **Base de données hybride** :
+  - **SQLite** (expo-sqlite) pour mobile (local)
+  - **Supabase** (PostgreSQL) pour web (cloud)
 - **React Native Picker** pour les listes déroulantes
 - **StatusBar** pour l'interface
 - **VS Code Extensions** :
@@ -85,7 +87,13 @@ BalanceTonPote/
 
 ## 💾 Base de Données
 
-La base de données SQLite (`balanceTonPote.db`) stocke automatiquement :
+### 🔄 Système Hybride
+L'application utilise automatiquement :
+- **Supabase (PostgreSQL)** pour le web - hébergement cloud gratuit
+- **SQLite** pour mobile - base locale rapide
+
+### 📊 Données stockées
+Chaque balançage contient :
 - ID unique du balançage
 - Nom du suspect
 - Nom du dénonciateur
@@ -93,6 +101,12 @@ La base de données SQLite (`balanceTonPote.db`) stocke automatiquement :
 - Autorité destinataire
 - Description détaillée
 - Date et heure de création
+
+### 🌐 Configuration Cloud (Optionnel)
+Pour héberger gratuitement la base en ligne avec Supabase :
+1. Voir le fichier `SUPABASE_SETUP.md` pour les instructions complètes
+2. Créer un compte gratuit sur [supabase.com](https://supabase.com)
+3. Configurer les clés API dans `lib/supabase.js`
 
 ## 🔧 Développement
 
