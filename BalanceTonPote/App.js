@@ -182,6 +182,31 @@ export default function App() {
     }
   };
 
+  // Calculer les statistiques par type de crime
+  const getStatsParType = () => {
+    const stats = {};
+    balancages.forEach(balancage => {
+      const type = balancage.type_action;
+      stats[type] = (stats[type] || 0) + 1;
+    });
+    return stats;
+  };
+
+  // Calculer les statistiques par coupable (top 3)
+  const getStatsParCoupable = () => {
+    const stats = {};
+    balancages.forEach(balancage => {
+      const coupable = balancage.nom_pote;
+      stats[coupable] = (stats[coupable] || 0) + 1;
+    });
+    
+    // Retourner les 3 coupables avec le plus de balançages
+    return Object.entries(stats)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 3)
+      .map(([nom, count]) => ({ nom, count }));
+  };
+
   const balancerPote = async () => {
     if (!nomPote.trim() || !nomBalanceur.trim() || !typeAction || !autorite || !description.trim()) {
       Alert.alert('Erreur', 'Tous les champs sont obligatoires pour procéder au balançage !');
@@ -432,21 +457,31 @@ export default function App() {
         <Text style={styles.statsText}>
           📊 TOTAL DES DOSSIERS : {balancages.length}
         </Text>
-        <View style={styles.connectionStatus}>
-          <Text style={[styles.dbIndicator, { color: useSupabase ? '#4CAF50' : '#FF6B6B' }]}>
-            {connectionStatus === 'connecting' ? '� Connexion...' : 
-             useSupabase ? '🌐 Base Partagée (Online)' : '📱 Base Locale (Offline)'}
-          </Text>
-          {!useSupabase && connectionStatus === 'offline' && (
-            <TouchableOpacity style={styles.reconnectButton} onPress={tryReconnectSupabase}>
-              <Text style={styles.reconnectButtonText}>🔄 Reconnecter</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-        {useSupabase && (
-          <Text style={styles.multiUserInfo}>
-            👥 Base partagée - Visible par tous les utilisateurs
-          </Text>
+        
+        {balancages.length > 0 && (
+          <>
+            <View style={styles.statsSection}>
+              <Text style={styles.statsSectionTitle}>🏷️ CRIMES PAR TYPE</Text>
+              {Object.entries(getStatsParType()).map(([type, count]) => (
+                <View key={type} style={styles.statsRow}>
+                  <Text style={styles.statsLabel}>{type} :</Text>
+                  <Text style={styles.statsValue}>{count}</Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.statsSection}>
+              <Text style={styles.statsSectionTitle}>🎯 TOP COUPABLES</Text>
+              {getStatsParCoupable().map((coupable, index) => (
+                <View key={coupable.nom} style={styles.statsRow}>
+                  <Text style={styles.statsLabel}>
+                    {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'} {coupable.nom} :
+                  </Text>
+                  <Text style={styles.statsValue}>{coupable.count}</Text>
+                </View>
+              ))}
+            </View>
+          </>
         )}
       </View>
 
@@ -775,6 +810,40 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     marginTop: 5,
+  },
+  statsSection: {
+    backgroundColor: '#2A2A2A',
+    borderRadius: 8,
+    padding: 15,
+    marginTop: 15,
+  },
+  statsSectionTitle: {
+    color: '#D4AF37',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  statsLabel: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    flex: 1,
+  },
+  statsValue: {
+    color: '#D4AF37',
+    fontSize: 12,
+    fontWeight: 'bold',
+    minWidth: 30,
+    textAlign: 'right',
   },
   userInfo: {
     marginTop: 10,
