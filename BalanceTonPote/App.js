@@ -496,27 +496,6 @@ export default function App() {
         </View>
 
         <View style={styles.settingsSection}>
-          <Text style={styles.sectionTitle}>🌐 CONNEXION</Text>
-          <View style={styles.connectionInfo}>
-            <Text style={styles.connectionLabel}>Base de données :</Text>
-            <Text style={[styles.connectionValue, { color: useSupabase ? '#4CAF50' : '#FF6B6B' }]}>
-              {useSupabase ? '🌐 Cloud (Supabase)' : '📱 Local (SQLite)'}
-            </Text>
-            <Text style={styles.connectionLabel}>Statut :</Text>
-            <Text style={[styles.connectionValue, { color: connectionStatus === 'online' ? '#4CAF50' : '#FF6B6B' }]}>
-              {connectionStatus === 'connecting' ? '🔄 Connexion...' : 
-               connectionStatus === 'online' ? '✅ Connecté' : '❌ Hors ligne'}
-            </Text>
-          </View>
-          
-          {!useSupabase && connectionStatus === 'offline' && (
-            <TouchableOpacity style={styles.reconnectButton} onPress={tryReconnectSupabase}>
-              <Text style={styles.reconnectButtonText}>🔄 Reconnecter à la base cloud</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        <View style={styles.settingsSection}>
           <Text style={styles.sectionTitle}>🚪 SESSION</Text>
           <TouchableOpacity style={styles.logoutButton} onPress={handleSignOut}>
             <Text style={styles.logoutButtonText}>🚪 DÉCONNEXION</Text>
@@ -1007,23 +986,6 @@ const styles = StyleSheet.create({
   userInfoValue: {
     color: '#FFFFFF',
     fontSize: 16,
-    marginBottom: 8,
-  },
-  connectionInfo: {
-    backgroundColor: '#2A2A2A',
-    borderRadius: 8,
-    padding: 15,
-  },
-  connectionLabel: {
-    color: '#D4AF37',
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  connectionValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
     marginBottom: 8,
   },
   logoutDescription: {
