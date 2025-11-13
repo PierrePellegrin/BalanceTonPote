@@ -742,7 +742,13 @@ const styles = StyleSheet.create({
   navTabActive: {
     borderTopColor: '#D4AF37',
     borderBottomColor: '#D4AF37',
+    borderLeftWidth: 2,
+    borderRightWidth: 2,
+    borderLeftColor: '#D4AF37',
+    borderRightColor: '#D4AF37',
     backgroundColor: 'rgba(212, 175, 55, 0.1)',
+    marginTop: -2,
+    paddingTop: 10,
   },
   navIcon: {
     fontSize: 24,
