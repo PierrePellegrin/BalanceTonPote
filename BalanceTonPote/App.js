@@ -20,7 +20,7 @@ import AuthScreen from './components/AuthScreen';
 let db;
 
 export default function App() {
-  const [currentTab, setCurrentTab] = useState('balancer');
+  const [currentTab, setCurrentTab] = useState('dashboard'); // Dashboard comme page d'accueil
   const [nomPote, setNomPote] = useState('');
   const [nomBalanceur, setNomBalanceur] = useState('');
   const [typeAction, setTypeAction] = useState('');
@@ -440,16 +440,6 @@ export default function App() {
             👥 Base partagée - Visible par tous les utilisateurs
           </Text>
         )}
-        {user && (
-          <View style={styles.userInfo}>
-            <Text style={styles.userInfoText}>
-              👤 Connecté : {user.user_metadata?.nom || user.email}
-            </Text>
-            <TouchableOpacity style={styles.logoutButton} onPress={handleSignOut}>
-              <Text style={styles.logoutButtonText}>🚪 Déconnexion</Text>
-            </TouchableOpacity>
-          </View>
-        )}
       </View>
 
       {balancages.length === 0 ? (
@@ -469,6 +459,65 @@ export default function App() {
           showsVerticalScrollIndicator={false}
         />
       )}
+    </View>
+  );
+
+  const renderSettingsScreen = () => (
+    <View style={styles.settingsContainer}>
+      <View style={styles.header}>
+        <Text style={styles.title}>⚙️ PARAMÈTRES ⚙️</Text>
+        <Text style={styles.subtitle}>CONFIGURATION DU TRIBUNAL</Text>
+      </View>
+      
+      <View style={styles.settingsContent}>
+        <View style={styles.settingsSection}>
+          <Text style={styles.sectionTitle}>👤 COMPTE INFORMATEUR</Text>
+          
+          {user && (
+            <View style={styles.userInfoCard}>
+              <Text style={styles.userInfoLabel}>EMAIL :</Text>
+              <Text style={styles.userInfoValue}>{user.email}</Text>
+              
+              <Text style={styles.userInfoLabel}>NOM :</Text>
+              <Text style={styles.userInfoValue}>{user.user_metadata?.nom || 'Non défini'}</Text>
+              
+              <Text style={styles.userInfoLabel}>STATUT :</Text>
+              <Text style={[styles.userInfoValue, { color: '#4CAF50' }]}>Informateur Actif</Text>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.settingsSection}>
+          <Text style={styles.sectionTitle}>🌐 CONNEXION</Text>
+          <View style={styles.connectionInfo}>
+            <Text style={styles.connectionLabel}>Base de données :</Text>
+            <Text style={[styles.connectionValue, { color: useSupabase ? '#4CAF50' : '#FF6B6B' }]}>
+              {useSupabase ? '🌐 Cloud (Supabase)' : '📱 Local (SQLite)'}
+            </Text>
+            <Text style={styles.connectionLabel}>Statut :</Text>
+            <Text style={[styles.connectionValue, { color: connectionStatus === 'online' ? '#4CAF50' : '#FF6B6B' }]}>
+              {connectionStatus === 'connecting' ? '🔄 Connexion...' : 
+               connectionStatus === 'online' ? '✅ Connecté' : '❌ Hors ligne'}
+            </Text>
+          </View>
+          
+          {!useSupabase && connectionStatus === 'offline' && (
+            <TouchableOpacity style={styles.reconnectButton} onPress={tryReconnectSupabase}>
+              <Text style={styles.reconnectButtonText}>🔄 Reconnecter à la base cloud</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <View style={styles.settingsSection}>
+          <Text style={styles.sectionTitle}>🚪 SESSION</Text>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleSignOut}>
+            <Text style={styles.logoutButtonText}>🚪 DÉCONNEXION</Text>
+          </TouchableOpacity>
+          <Text style={styles.logoutDescription}>
+            Se déconnecter du tribunal et retourner à l'écran d'identification
+          </Text>
+        </View>
+      </View>
     </View>
   );
 
@@ -507,7 +556,9 @@ export default function App() {
       
       {/* Contenu principal */}
       <View style={styles.mainContent}>
-        {currentTab === 'balancer' ? renderBalancerScreen() : renderDashboardScreen()}
+        {currentTab === 'balancer' ? renderBalancerScreen() : 
+         currentTab === 'settings' ? renderSettingsScreen() : 
+         renderDashboardScreen()}
       </View>
 
       {/* Menu de navigation en bas */}
@@ -527,6 +578,15 @@ export default function App() {
         >
           <Text style={[styles.navButtonText, currentTab === 'balancer' && styles.navButtonTextActive]}>
             🕵️ BALANCER
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.navButton, currentTab === 'settings' && styles.navButtonActive]}
+          onPress={() => setCurrentTab('settings')}
+        >
+          <Text style={[styles.navButtonText, currentTab === 'settings' && styles.navButtonTextActive]}>
+            ⚙️ SETTINGS
           </Text>
         </TouchableOpacity>
       </View>
@@ -555,6 +615,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: '#8B0000',
     paddingBottom: 20,
+    paddingTop: 20, // Espace pour éviter les icônes Android
   },
   title: {
     fontSize: 24,
@@ -894,5 +955,72 @@ const styles = StyleSheet.create({
     textShadowColor: '#000',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 1,
+  },
+  // Styles pour Settings
+  settingsContainer: {
+    flex: 1,
+    padding: 20,
+  },
+  settingsContent: {
+    flex: 1,
+  },
+  settingsSection: {
+    backgroundColor: '#1A1A1A',
+    borderWidth: 2,
+    borderColor: '#8B0000',
+    borderRadius: 8,
+    padding: 20,
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    color: '#D4AF37',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  userInfoCard: {
+    backgroundColor: '#2A2A2A',
+    borderRadius: 8,
+    padding: 15,
+    marginTop: 10,
+  },
+  userInfoLabel: {
+    color: '#D4AF37',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  userInfoValue: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    marginBottom: 8,
+  },
+  connectionInfo: {
+    backgroundColor: '#2A2A2A',
+    borderRadius: 8,
+    padding: 15,
+  },
+  connectionLabel: {
+    color: '#D4AF37',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  connectionValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  logoutDescription: {
+    color: '#666',
+    fontSize: 12,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginTop: 10,
   },
 });
