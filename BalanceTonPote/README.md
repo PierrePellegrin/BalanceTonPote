@@ -87,10 +87,11 @@ BalanceTonPote/
 
 ## 💾 Base de Données
 
-### 🔄 Système Hybride
-L'application utilise automatiquement :
-- **Supabase (PostgreSQL)** pour le web - hébergement cloud gratuit
-- **SQLite** pour mobile - base locale rapide
+### 🔄 Système Multi-Utilisateurs Cloud
+L'application utilise maintenant **Supabase par défaut** sur toutes les plateformes :
+- **Base partagée en ligne** - Tous les utilisateurs voient les mêmes données
+- **Fallback SQLite automatique** si connexion impossible
+- **Reconnexion automatique** quand le réseau revient
 
 ### 📊 Données stockées
 Chaque balançage contient :
@@ -102,11 +103,18 @@ Chaque balançage contient :
 - Description détaillée
 - Date et heure de création
 
-### 🌐 Configuration Cloud (Optionnel)
-Pour héberger gratuitement la base en ligne avec Supabase :
-1. Voir le fichier `SUPABASE_SETUP.md` pour les instructions complètes
-2. Créer un compte gratuit sur [supabase.com](https://supabase.com)
+### 🌐 Configuration Cloud (Obligatoire pour le partage)
+Pour permettre à plusieurs utilisateurs de partager les balançages :
+1. **OBLIGATOIRE** : Voir le fichier `SUPABASE_SETUP.md` pour les instructions complètes
+2. Créer un compte gratuit sur [supabase.com](https://supabase.com)  
 3. Configurer les clés API dans `lib/supabase.js`
+4. **L'application fonctionne en mode offline** si Supabase n'est pas configuré
+
+### 👥 Mode Multi-Utilisateurs
+- **Base partagée** : Tous les balançages sont visibles par tous
+- **Temps réel** : Les nouveaux balançages apparaissent instantanément
+- **Indicateur de connexion** : Savoir si vous êtes online ou offline
+- **Reconnexion automatique** : Bouton pour se reconnecter
 
 ## 🔧 Développement
 

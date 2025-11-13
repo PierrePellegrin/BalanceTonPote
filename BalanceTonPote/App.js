@@ -26,7 +26,8 @@ export default function App() {
   const [autorite, setAutorite] = useState('');
   const [description, setDescription] = useState('');
   const [balancages, setBalancages] = useState([]);
-  const [useSupabase, setUseSupabase] = useState(Platform.OS === 'web');
+  const [useSupabase, setUseSupabase] = useState(true); // Toujours utiliser Supabase par défaut
+  const [connectionStatus, setConnectionStatus] = useState('connecting');
 
   const typesActions = [
     { label: 'Sélectionner un type...', value: '' },
@@ -73,21 +74,20 @@ export default function App() {
   };
 
   useEffect(() => {
-    // Initialiser la base de données selon la plateforme
+    // Initialiser la base de données - Priorité à Supabase pour partage multi-utilisateurs
     const initDatabase = async () => {
-      if (useSupabase) {
-        // Utiliser Supabase pour le web
-        try {
-          await initializeDatabase();
-          console.log('Supabase initialisé pour le web');
-        } catch (error) {
-          console.log('Erreur Supabase, fallback vers SQLite local:', error);
-          setUseSupabase(false);
-        }
-      }
-      
-      if (!useSupabase) {
-        // Utiliser SQLite pour mobile ou fallback
+      try {
+        // Essayer d'abord Supabase (base partagée)
+        await initializeDatabase();
+        console.log('Supabase initialisé avec succès - Base partagée disponible');
+        setUseSupabase(true);
+        setConnectionStatus('online');
+      } catch (error) {
+        console.log('Erreur Supabase, fallback vers SQLite local:', error);
+        // Fallback vers SQLite si Supabase indisponible
+        setUseSupabase(false);
+        setConnectionStatus('offline');
+        
         try {
           db = await SQLite.openDatabaseAsync('balanceTonPote.db');
           await db.execAsync(`
@@ -101,15 +101,15 @@ export default function App() {
               date_creation DATETIME DEFAULT CURRENT_TIMESTAMP
             );
           `);
-          console.log('Base de données SQLite initialisée avec succès');
-        } catch (error) {
-          console.log('Erreur lors de l\'initialisation SQLite:', error);
+          console.log('Base de données SQLite initialisée avec succès (mode offline)');
+        } catch (sqliteError) {
+          console.log('Erreur lors de l\'initialisation SQLite:', sqliteError);
         }
       }
     };
     
     initDatabase();
-  }, [useSupabase]);
+  }, []);
 
   useEffect(() => {
     // Reset l'autorité quand le type d'action change
@@ -194,6 +194,21 @@ export default function App() {
     } catch (error) {
       Alert.alert('Erreur', 'Échec de l\'enregistrement du balançage: ' + error.message);
       console.log('Erreur:', error);
+    }
+  };
+
+  const tryReconnectSupabase = async () => {
+    setConnectionStatus('connecting');
+    try {
+      await initializeDatabase();
+      setUseSupabase(true);
+      setConnectionStatus('online');
+      Alert.alert('✅ Connexion Rétablie', 'Vous êtes maintenant connecté à la base partagée !');
+      loadBalancages(); // Recharger les données
+    } catch (error) {
+      setUseSupabase(false);
+      setConnectionStatus('offline');
+      Alert.alert('❌ Connexion Échouée', 'Impossible de se connecter à la base partagée. Mode offline maintenu.');
     }
   };
 
@@ -347,9 +362,22 @@ export default function App() {
         <Text style={styles.statsText}>
           📊 TOTAL DES DOSSIERS : {balancages.length}
         </Text>
-        <Text style={styles.dbIndicator}>
-          🗄️ Base : {useSupabase ? 'Supabase (Cloud)' : 'SQLite (Local)'}
-        </Text>
+        <View style={styles.connectionStatus}>
+          <Text style={[styles.dbIndicator, { color: useSupabase ? '#4CAF50' : '#FF6B6B' }]}>
+            {connectionStatus === 'connecting' ? '� Connexion...' : 
+             useSupabase ? '🌐 Base Partagée (Online)' : '📱 Base Locale (Offline)'}
+          </Text>
+          {!useSupabase && connectionStatus === 'offline' && (
+            <TouchableOpacity style={styles.reconnectButton} onPress={tryReconnectSupabase}>
+              <Text style={styles.reconnectButtonText}>🔄 Reconnecter</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        {useSupabase && (
+          <Text style={styles.multiUserInfo}>
+            👥 Base partagée - Visible par tous les utilisateurs
+          </Text>
+        )}
       </View>
 
       {balancages.length === 0 ? (
@@ -568,11 +596,34 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   dbIndicator: {
-    color: '#8B0000',
     fontSize: 12,
     fontWeight: 'bold',
-    marginTop: 5,
     textAlign: 'center',
+  },
+  connectionStatus: {
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  reconnectButton: {
+    backgroundColor: '#8B0000',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 5,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#D4AF37',
+  },
+  reconnectButtonText: {
+    color: '#D4AF37',
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+  multiUserInfo: {
+    color: '#4CAF50',
+    fontSize: 10,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginTop: 5,
   },
   emptyState: {
     flex: 1,

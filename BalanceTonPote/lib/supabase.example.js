@@ -1,15 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
-// ⚠️ IMPORTANT: Remplacez ces valeurs par vos vraies clés Supabase
-// Exemple: const SUPABASE_URL = 'https://abcdefghijklmnop.supabase.co';
-const SUPABASE_URL = 'https://votre-projet.supabase.co'; // À remplacer
-const SUPABASE_ANON_KEY = 'your-anon-key-here'; // À remplacer
-
-// 🔧 Pour obtenir ces valeurs :
-// 1. Allez sur https://supabase.com
-// 2. Créez un projet (gratuit)
-// 3. Allez dans Settings > API
-// 4. Copiez "Project URL" et "anon public" key
+// 🔧 Configuration Supabase - Remplacez par vos vraies valeurs
+const SUPABASE_URL = 'https://abcdefghijklmnop.supabase.co'; // Votre Project URL
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFiY2RlZmdoaWprbG1ub3AiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTYxMjE5NzI4MSwiZXhwIjoxOTI3NzczMjgxfQ.example-key-replace-with-yours'; // Votre anon key
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 

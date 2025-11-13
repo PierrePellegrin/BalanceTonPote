@@ -1,6 +1,10 @@
 # 🌐 Configuration Supabase pour BalanceTonPote
 
-## 📋 Étapes pour héberger gratuitement la base de données
+## � **OBLIGATOIRE pour le partage multi-utilisateurs**
+
+⚠️ **Important** : Pour que vous 3 puissiez partager les mêmes balançages, Supabase DOIT être configuré.
+
+## �📋 Étapes pour héberger gratuitement la base de données
 
 ### 1. Créer un compte Supabase
 1. Allez sur [supabase.com](https://supabase.com)
@@ -47,6 +51,8 @@ const SUPABASE_URL = 'https://votre-projet.supabase.co'; // Votre Project URL
 const SUPABASE_ANON_KEY = 'your-anon-key-here'; // Votre anon key
 ```
 
+**💡 Conseil** : Copiez le fichier `lib/supabase.example.js` vers `lib/supabase.js` et modifiez les valeurs.
+
 ### 6. Désactiver RLS (pour simplifier)
 Dans le SQL Editor de Supabase, exécutez :
 
@@ -73,16 +79,26 @@ ALTER TABLE balancages DISABLE ROW LEVEL SECURITY;
 - Authentification intégrée disponible
 - Stockage de fichiers inclus
 
-## 🔄 Fonctionnement Hybride
+## � Fonctionnement Multi-Utilisateurs
 
 L'application utilise maintenant :
-- **Supabase** (cloud) pour le web 
-- **SQLite** (local) pour mobile
+- **Supabase** (cloud) par défaut sur TOUTES les plateformes
+- **SQLite** (local) comme fallback seulement
 
 Cela permet :
-- Performance optimale sur mobile
-- Synchronisation cloud sur web
-- Fallback automatique si Supabase indisponible
+- **Base partagée** entre tous les utilisateurs
+- **Synchronisation temps réel** des balançages
+- **Indicateur de connexion** (online/offline)
+- **Reconnexion automatique** si réseau coupé
+- **Mode offline** si Supabase indisponible
+
+## 🎯 Pour vous 3 utilisateurs
+
+Une fois configuré, vous pourrez TOUS :
+- ✅ Voir les balançages des autres en temps réel
+- ✅ Ajouter des balançages visibles par tous
+- ✅ Utiliser l'app même sans réseau (mode offline)
+- ✅ Se reconnecter automatiquement
 
 ## 📊 Tableau de bord Supabase
 
