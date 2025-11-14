@@ -104,7 +104,6 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.6,
     shadowRadius: 8,
     elevation: 8,
-    minHeight: 58,
   },
   submitButtonText: {
     color: '#D4AF37',
@@ -566,6 +565,5 @@ export const styles = StyleSheet.create({
     gap: 8,
     borderWidth: 2,
     borderColor: '#8B0000',
-    minHeight: 58,
   },
 });
