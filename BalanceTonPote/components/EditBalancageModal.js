@@ -149,13 +149,52 @@ export const EditBalancageModal = ({ visible, balancage, onClose, onSave }) => {
               </View>
 
               {/* Boutons */}
-              <View style={styles.modalButtonsContainer}>
-                <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+              <View style={{
+                flexDirection: 'row',
+                gap: 10,
+                marginTop: 20,
+              }}>
+                <TouchableOpacity 
+                  style={{
+                    flex: 1,
+                    backgroundColor: '#2A2A2A',
+                    paddingVertical: 18,
+                    paddingHorizontal: 10,
+                    borderRadius: 10,
+                    alignItems: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    gap: 8,
+                    borderWidth: 2,
+                    borderColor: '#8B0000',
+                  }} 
+                  onPress={onClose}
+                >
                   <MaterialCommunityIcons name="close" size={20} color="#8B0000" />
                   <Text style={styles.buttonText}>ANNULER</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.submitButton} onPress={handleSave}>
+                <TouchableOpacity 
+                  style={{
+                    flex: 1,
+                    backgroundColor: '#8B0000',
+                    paddingVertical: 18,
+                    paddingHorizontal: 10,
+                    borderRadius: 10,
+                    alignItems: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    gap: 8,
+                    borderWidth: 2,
+                    borderColor: '#D4AF37',
+                    shadowColor: '#D4AF37',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.6,
+                    shadowRadius: 8,
+                    elevation: 8,
+                  }} 
+                  onPress={handleSave}
+                >
                   <MaterialCommunityIcons name="lock" size={20} color="#D4AF37" />
                   <Text style={styles.buttonText}>ENREGISTRER</Text>
                 </TouchableOpacity>
