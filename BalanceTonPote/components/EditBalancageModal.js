@@ -171,7 +171,7 @@ export const EditBalancageModal = ({ visible, balancage, onClose, onSave }) => {
                   onPress={onClose}
                 >
                   <MaterialCommunityIcons name="close" size={20} color="#8B0000" />
-                  <Text style={styles.buttonText}>ANNULER</Text>
+                  <Text style={[styles.buttonText, { color: '#8B0000' }]}>ANNULER</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity 
@@ -188,15 +188,15 @@ export const EditBalancageModal = ({ visible, balancage, onClose, onSave }) => {
                     borderWidth: 2,
                     borderColor: '#D4AF37',
                     shadowColor: '#D4AF37',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.6,
-                    shadowRadius: 8,
-                    elevation: 8,
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 3,
+                    elevation: 3,
                   }} 
                   onPress={handleSave}
                 >
                   <MaterialCommunityIcons name="lock" size={20} color="#D4AF37" />
-                  <Text style={styles.buttonText}>ENREGISTRER</Text>
+                  <Text style={[styles.buttonText, { color: '#D4AF37' }]}>ENREGISTRER</Text>
                 </TouchableOpacity>
               </View>
             </View>
