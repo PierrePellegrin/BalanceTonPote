@@ -2,7 +2,7 @@
   "expo": {
     "name": "Balance Ton Pote",
     "slug": "temp-app",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
