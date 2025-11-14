@@ -565,5 +565,6 @@ export const styles = StyleSheet.create({
     gap: 8,
     borderWidth: 2,
     borderColor: '#8B0000',
+    maxHeight: 62,
   },
 });
