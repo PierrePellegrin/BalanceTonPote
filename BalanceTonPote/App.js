@@ -44,7 +44,9 @@ export default function App() {
     { label: 'Crime', value: 'Crime' },
     { label: 'Détournement', value: 'Détournement' },
     { label: 'Adultère', value: 'Adultère' },
-    { label: 'Mauvaise action', value: 'Mauvaise action' }
+    { label: 'Mauvaise action', value: 'Mauvaise action' },
+    { label: 'Propriété intellectuelle', value: 'Propriété intellectuelle' },
+    { label: 'Mauvaise fois', value: 'Mauvaise fois' }
   ];
 
   const getAutorites = () => {
