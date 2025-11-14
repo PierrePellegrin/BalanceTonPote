@@ -556,7 +556,7 @@ export const styles = StyleSheet.create({
   },
   cancelButton: {
     flex: 1,
-    backgroundColor: '#444',
+    backgroundColor: '#2A2A2A',
     padding: 18,
     borderRadius: 10,
     alignItems: 'center',
@@ -564,6 +564,6 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderWidth: 2,
-    borderColor: '#666',
+    borderColor: '#8B0000',
   },
 });
