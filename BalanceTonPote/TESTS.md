@@ -111,6 +111,29 @@ Time:        2.5s
 - [ ] Tests E2E avec Detox
 - [ ] CI/CD avec GitHub Actions
 
+## 📊 Résultats obtenus
+
+```
+Test Suites: 5 passed, 5 total
+Tests:       60 passed, 60 total
+Snapshots:   0 total
+Time:        ~7-13s
+
+Coverage:
+----------------|---------|----------|---------|---------|
+File            | % Stmts | % Branch | % Funcs | % Lines |
+----------------|---------|----------|---------|---------|
+All files       |     100 |      100 |     100 |     100 |
+ constants      |     100 |      100 |     100 |     100 |
+  crimeTypes.js |     100 |      100 |     100 |     100 |
+  theme.js      |     100 |      100 |     100 |     100 |
+ utils          |     100 |      100 |     100 |     100 |
+  dateUtils.js  |     100 |      100 |     100 |     100 |
+  statsUtils.js |     100 |      100 |     100 |     100 |
+  userUtils.js  |     100 |      100 |     100 |     100 |
+----------------|---------|----------|---------|---------|
+```
+
 ## 🤝 Contribution
 
 Pour ajouter de nouveaux tests :
