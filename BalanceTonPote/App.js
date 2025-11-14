@@ -84,6 +84,12 @@ export default function App() {
           { label: 'Bureau des brevets', value: 'Bureau des brevets' },
           { label: 'Ton voisin', value: 'Ton voisin' }
         ];
+         case 'Mauvaise fois':
+        return [
+          { label: 'Sélectionner une autorité...', value: '' },
+          { label: 'Tes potes', value: 'Tes potes' },
+          { label: 'D la réponse D', value: 'D la réponse D' }
+        ];
       default:
         return [{ label: 'Sélectionner d\'abord un type...', value: '' }];
     }
@@ -554,7 +560,7 @@ export default function App() {
           <View style={styles.pickerContainer}>
             <Picker
               selectedValue={showNewSuspectInput ? 'AUTRE' : nomPote}
-              style={styles.picker}
+              style={[styles.picker, { backgroundColor: '#2A2A2A', color: '#FFFFFF' }]}
               onValueChange={(value) => {
                 if (value === 'AUTRE') {
                   setShowNewSuspectInput(true);
@@ -565,26 +571,29 @@ export default function App() {
                 }
               }}
               dropdownIconColor="#D4AF37"
-              mode="dialog"
-              prompt="Sélectionner un suspect"
+              mode="dropdown"
+              itemStyle={{ backgroundColor: '#2A2A2A', color: '#FFFFFF' }}
             >
               <Picker.Item 
                 label="Sélectionner un suspect..." 
                 value="" 
-                color="#999"
+                color="#BBBBBB"
+                style={{ backgroundColor: '#2A2A2A' }}
               />
               {usersList.map((user, index) => (
                 <Picker.Item 
                   key={index} 
                   label={user} 
                   value={user}
-                  color="#000"
+                  color="#FFFFFF"
+                  style={{ backgroundColor: '#2A2A2A' }}
                 />
               ))}
               <Picker.Item 
                 label="➕ Nouveau suspect..." 
                 value="AUTRE" 
-                color="#8B0000"
+                color="#D4AF37"
+                style={{ backgroundColor: '#2A2A2A' }}
               />
             </Picker>
           </View>
@@ -616,18 +625,19 @@ export default function App() {
           <View style={styles.pickerContainer}>
             <Picker
               selectedValue={typeAction}
-              style={styles.picker}
+              style={[styles.picker, { backgroundColor: '#2A2A2A', color: '#FFFFFF' }]}
               onValueChange={setTypeAction}
               dropdownIconColor="#D4AF37"
-              mode="dialog"
-              prompt="Sélectionner le type de crime"
+              mode="dropdown"
+              itemStyle={{ backgroundColor: '#2A2A2A', color: '#FFFFFF' }}
             >
               {typesActions.map((type, index) => (
                 <Picker.Item 
                   key={index} 
                   label={type.label} 
                   value={type.value}
-                  color={type.value === '' ? '#666' : '#000'}
+                  color={type.value === '' ? '#BBBBBB' : '#FFFFFF'}
+                  style={{ backgroundColor: '#2A2A2A' }}
                 />
               ))}
             </Picker>
@@ -639,19 +649,20 @@ export default function App() {
           <View style={styles.pickerContainer}>
             <Picker
               selectedValue={autorite}
-              style={styles.picker}
+              style={[styles.picker, { backgroundColor: '#2A2A2A', color: '#FFFFFF' }]}
               onValueChange={setAutorite}
               dropdownIconColor="#D4AF37"
               enabled={typeAction !== ''}
-              mode="dialog"
-              prompt="Sélectionner l'autorité compétente"
+              mode="dropdown"
+              itemStyle={{ backgroundColor: '#2A2A2A', color: '#FFFFFF' }}
             >
               {getAutorites().map((auth, index) => (
                 <Picker.Item 
                   key={index} 
                   label={auth.label} 
                   value={auth.value}
-                  color={auth.value === '' ? '#666' : '#000'}
+                  color={auth.value === '' ? '#BBBBBB' : '#FFFFFF'}
+                  style={{ backgroundColor: '#2A2A2A' }}
                 />
               ))}
             </Picker>
@@ -1055,7 +1066,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   pickerContainer: {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#2A2A2A',
     borderWidth: 2,
     borderColor: '#8B0000',
     borderRadius: 8,
@@ -1063,7 +1074,14 @@ const styles = StyleSheet.create({
   },
   picker: {
     color: '#FFFFFF',
-    backgroundColor: 'transparent',
+    backgroundColor: '#2A2A2A',
+    ...Platform.select({
+      android: {
+        backgroundColor: '#2A2A2A',
+        color: '#FFFFFF',
+        fontFamily: 'System',
+      },
+    }),
   },
   submitButton: {
     backgroundColor: '#8B0000',
