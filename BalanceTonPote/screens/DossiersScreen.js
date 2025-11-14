@@ -76,7 +76,7 @@ export const DossiersScreen = ({
         <EmptyState 
           icon="🎯"
           title="AUCUN DOSSIER"
-          subtitle='Commencez par dénoncer un suspect dans l\'onglet "Balancer"'
+          subtitle="Commencez par dénoncer un suspect dans l'onglet Balancer"
         />
       ) : (
         <View style={styles.dossiersContent}>
