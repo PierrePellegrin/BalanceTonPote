@@ -302,6 +302,20 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  cardHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  cardActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  cardActionButton: {
+    padding: 4,
+    borderRadius: 4,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
   cardDate: {
     color: '#FFFFFF',
     fontSize: 10,
@@ -534,5 +548,22 @@ export const styles = StyleSheet.create({
   },
   expandableCard: {
     marginBottom: 8,
+  },
+  modalButtonsContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 10,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#444',
+    padding: 18,
+    borderRadius: 10,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 2,
+    borderColor: '#666',
   },
 });

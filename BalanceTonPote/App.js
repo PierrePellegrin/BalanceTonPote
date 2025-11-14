@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { View, TouchableOpacity, Text, SafeAreaView, Alert, Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { MaterialCommunityIcons, Ionicons, MaterialIcons } from '@expo/vector-icons';
@@ -12,6 +12,7 @@ import { DossiersScreen } from './screens/DossiersScreen';
 import { BalancerScreen } from './screens/BalancerScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import AuthScreen from './components/AuthScreen';
+import { EditBalancageModal } from './components/EditBalancageModal';
 
 // Utils
 import { getUserDisplayName } from './utils/userUtils';
@@ -43,7 +44,11 @@ export default function App() {
   // Hooks personnalisés
   const { user, authLoading } = useAuth();
   const { db, useSupabase } = useDatabase();
-  const { balancages, usersList, loadBalancages, loadUsers, saveBalancage } = useBalancages(db, useSupabase, user);
+  const { balancages, usersList, loadBalancages, loadUsers, saveBalancage, updateBalancage, deleteBalancage } = useBalancages(db, useSupabase, user);
+
+  // État pour le modal d'édition
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [balancageToEdit, setBalancageToEdit] = useState(null);
 
   // Reset l'autorité quand le type d'action change
   useEffect(() => {
@@ -150,6 +155,36 @@ export default function App() {
     }
   };
 
+  // Ouvrir le modal d'édition
+  const handleEditBalancage = (balancage) => {
+    setBalancageToEdit(balancage);
+    setEditModalVisible(true);
+  };
+
+  // Sauvegarder les modifications
+  const handleSaveEdit = async (id, updates) => {
+    try {
+      await updateBalancage(id, updates);
+      setEditModalVisible(false);
+      setBalancageToEdit(null);
+      await loadBalancages();
+      Alert.alert('✅ SUCCÈS', 'Le dossier a été modifié avec succès');
+    } catch (error) {
+      Alert.alert('❌ ERREUR', error.message || 'Erreur lors de la modification du dossier');
+    }
+  };
+
+  // Supprimer un balançage
+  const handleDeleteBalancage = async (id) => {
+    try {
+      await deleteBalancage(id);
+      await loadBalancages();
+      Alert.alert('✅ SUCCÈS', 'Le dossier a été supprimé avec succès');
+    } catch (error) {
+      Alert.alert('❌ ERREUR', error.message || 'Erreur lors de la suppression du dossier');
+    }
+  };
+
   // Affichage de chargement
   if (authLoading) {
     return (
@@ -211,6 +246,9 @@ export default function App() {
             setDossiersTab={setDossiersTab}
             expandedGroups={expandedGroups}
             onToggleExpanded={toggleExpanded}
+            currentUserId={user?.id}
+            onEditBalancage={handleEditBalancage}
+            onDeleteBalancage={handleDeleteBalancage}
           />
         );
       case TABS.SETTINGS:
@@ -292,6 +330,17 @@ export default function App() {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Modal d'édition */}
+      <EditBalancageModal 
+        visible={editModalVisible}
+        balancage={balancageToEdit}
+        onClose={() => {
+          setEditModalVisible(false);
+          setBalancageToEdit(null);
+        }}
+        onSave={handleSaveEdit}
+      />
     </SafeAreaView>
   );
 }

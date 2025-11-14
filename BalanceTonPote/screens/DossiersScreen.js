@@ -17,7 +17,10 @@ export const DossiersScreen = ({
   dossiersTab, 
   setDossiersTab,
   expandedGroups,
-  onToggleExpanded 
+  onToggleExpanded,
+  currentUserId,
+  onEditBalancage,
+  onDeleteBalancage
 }) => {
   return (
     <View style={styles.dashboardContainer}>
@@ -83,7 +86,14 @@ export const DossiersScreen = ({
           {dossiersTab === DOSSIERS_TABS.TOUS ? (
             <FlatList
               data={balancages}
-              renderItem={({ item }) => <BalancageCard item={item} />}
+              renderItem={({ item }) => (
+                <BalancageCard 
+                  item={item} 
+                  currentUserId={currentUserId}
+                  onEdit={onEditBalancage}
+                  onDelete={onDeleteBalancage}
+                />
+              )}
               keyExtractor={(item) => item.id.toString()}
               style={styles.cardList}
               showsVerticalScrollIndicator={false}
@@ -97,6 +107,9 @@ export const DossiersScreen = ({
                   type="suspect"
                   isExpanded={expandedGroups[`suspect_${group.nom}`]}
                   onToggle={() => onToggleExpanded(`suspect_${group.nom}`)}
+                  currentUserId={currentUserId}
+                  onEdit={onEditBalancage}
+                  onDelete={onDeleteBalancage}
                 />
               ))}
             </ScrollView>
@@ -109,6 +122,9 @@ export const DossiersScreen = ({
                   type="balance"
                   isExpanded={expandedGroups[`balance_${group.nom}`]}
                   onToggle={() => onToggleExpanded(`balance_${group.nom}`)}
+                  currentUserId={currentUserId}
+                  onEdit={onEditBalancage}
+                  onDelete={onDeleteBalancage}
                 />
               ))}
             </ScrollView>

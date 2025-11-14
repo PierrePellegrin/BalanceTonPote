@@ -7,7 +7,9 @@ import {
   getAllBalancages, 
   getAllUsers,
   getCurrentUser,
-  onAuthStateChange
+  onAuthStateChange,
+  updateBalancage,
+  deleteBalancage
 } from '../lib/supabase';
 
 /**
@@ -162,6 +164,51 @@ export const useBalancages = (db, useSupabase, user) => {
     }
   };
 
+  const updateBalancageById = async (id, updates) => {
+    try {
+      if (useSupabase) {
+        if (!user?.id) {
+          throw new Error('Utilisateur non connecté');
+        }
+        await updateBalancage(id, updates, user.id);
+      } else {
+        if (!db) {
+          throw new Error('Base de données non initialisée');
+        }
+        const setClause = Object.keys(updates).map(key => `${key} = ?`).join(', ');
+        const values = [...Object.values(updates), id];
+        await db.runAsync(
+          `UPDATE balancages SET ${setClause} WHERE id = ?`,
+          values
+        );
+      }
+      return true;
+    } catch (error) {
+      console.log('Erreur updateBalancage:', error);
+      throw error;
+    }
+  };
+
+  const deleteBalancageById = async (id) => {
+    try {
+      if (useSupabase) {
+        if (!user?.id) {
+          throw new Error('Utilisateur non connecté');
+        }
+        await deleteBalancage(id, user.id);
+      } else {
+        if (!db) {
+          throw new Error('Base de données non initialisée');
+        }
+        await db.runAsync('DELETE FROM balancages WHERE id = ?', [id]);
+      }
+      return true;
+    } catch (error) {
+      console.log('Erreur deleteBalancage:', error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     if (user) {
       loadBalancages();
@@ -169,5 +216,13 @@ export const useBalancages = (db, useSupabase, user) => {
     }
   }, [user]);
 
-  return { balancages, usersList, loadBalancages, loadUsers, saveBalancage };
+  return { 
+    balancages, 
+    usersList, 
+    loadBalancages, 
+    loadUsers, 
+    saveBalancage,
+    updateBalancage: updateBalancageById,
+    deleteBalancage: deleteBalancageById
+  };
 };

@@ -7,7 +7,7 @@ import { styles } from '../styles/appStyles';
 /**
  * Composant pour afficher un groupe expandable de balançages
  */
-export const ExpandableGroup = ({ group, type, isExpanded, onToggle }) => {
+export const ExpandableGroup = ({ group, type, isExpanded, onToggle, currentUserId, onEdit, onDelete }) => {
   const groupKey = `${type}_${group.nom}`;
   
   return (
@@ -38,7 +38,12 @@ export const ExpandableGroup = ({ group, type, isExpanded, onToggle }) => {
         <View style={styles.expandableContent}>
           {group.dossiers.map((dossier) => (
             <View key={dossier.id} style={styles.expandableCard}>
-              <BalancageCard item={dossier} />
+              <BalancageCard 
+                item={dossier} 
+                currentUserId={currentUserId}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
             </View>
           ))}
         </View>

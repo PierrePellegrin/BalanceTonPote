@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { MaterialCommunityIcons, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { styles } from '../styles/appStyles';
 import { formatDate } from '../utils/dateUtils';
@@ -7,14 +7,44 @@ import { formatDate } from '../utils/dateUtils';
 /**
  * Composant Card pour afficher un balançage
  */
-export const BalancageCard = ({ item }) => (
+export const BalancageCard = ({ item, currentUserId, onEdit, onDelete }) => {
+  const isOwner = item.user_id === currentUserId;
+
+  const handleDelete = () => {
+    Alert.alert(
+      '⚠️ CONFIRMATION',
+      `Êtes-vous sûr de vouloir supprimer le dossier #${item.id} ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { 
+          text: 'Supprimer', 
+          style: 'destructive',
+          onPress: () => onDelete(item.id)
+        }
+      ]
+    );
+  };
+
+  return (
   <View style={styles.card}>
     <View style={styles.cardHeader}>
       <View style={styles.cardTitleContainer}>
         <MaterialCommunityIcons name="folder-open" size={20} color="#D4AF37" />
         <Text style={styles.cardTitle}>DOSSIER #{item.id}</Text>
       </View>
-      <Text style={styles.cardDate}>{formatDate(item.date_creation)}</Text>
+      <View style={styles.cardHeaderRight}>
+        <Text style={styles.cardDate}>{formatDate(item.date_creation)}</Text>
+        {isOwner && (
+          <View style={styles.cardActions}>
+            <TouchableOpacity onPress={() => onEdit(item)} style={styles.cardActionButton}>
+              <MaterialCommunityIcons name="pencil" size={18} color="#D4AF37" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleDelete} style={styles.cardActionButton}>
+              <MaterialCommunityIcons name="delete" size={18} color="#8B0000" />
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
     </View>
     
     <View style={styles.cardBody}>
@@ -65,4 +95,5 @@ export const BalancageCard = ({ item }) => (
       </View>
     </View>
   </View>
-);
+  );
+};

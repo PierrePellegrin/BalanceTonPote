@@ -124,6 +124,68 @@ export const getBalancagesByUser = async (userId) => {
   return data;
 };
 
+// Mettre à jour un balançage (uniquement si user_id correspond)
+export const updateBalancage = async (id, updates, userId) => {
+  // Vérifier d'abord que le balançage appartient à l'utilisateur
+  const { data: existing, error: checkError } = await supabase
+    .from('balancages')
+    .select('user_id')
+    .eq('id', id)
+    .single();
+
+  if (checkError) {
+    throw checkError;
+  }
+
+  if (existing.user_id !== userId) {
+    throw new Error('Vous ne pouvez modifier que vos propres dossiers');
+  }
+
+  // Effectuer la mise à jour
+  const { data, error } = await supabase
+    .from('balancages')
+    .update(updates)
+    .eq('id', id)
+    .eq('user_id', userId);
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+};
+
+// Supprimer un balançage (uniquement si user_id correspond)
+export const deleteBalancage = async (id, userId) => {
+  // Vérifier d'abord que le balançage appartient à l'utilisateur
+  const { data: existing, error: checkError } = await supabase
+    .from('balancages')
+    .select('user_id')
+    .eq('id', id)
+    .single();
+
+  if (checkError) {
+    throw checkError;
+  }
+
+  if (existing.user_id !== userId) {
+    throw new Error('Vous ne pouvez supprimer que vos propres dossiers');
+  }
+
+  // Effectuer la suppression
+  const { data, error } = await supabase
+    .from('balancages')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userId);
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+};
+
 // 🔐 Fonctions d'authentification
 export const signUp = async (email, password, nom) => {
   const { data, error } = await supabase.auth.signUp({
