@@ -554,6 +554,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
     marginTop: 20,
+    alignItems: 'center',
   },
   cancelButton: {
     flex: 1,
